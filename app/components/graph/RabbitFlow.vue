@@ -1,18 +1,34 @@
 <script setup lang="ts">
-import { VueFlow } from '@vue-flow/core'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { useGraphStore } from '~/stores/graph'
 import ChatPair from './ChatPair.vue'
 import SettingsModal from '~/components/SettingsModal.vue'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, markRaw } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 const store = useGraphStore()
+const vueFlowInstance = ref<any>(null)
 const isSettingsOpen = ref(false)
 
 const nodeTypes = {
-  chatPair: ChatPair
+  chatPair: markRaw(ChatPair)
+}
+
+onMounted(() => {
+  if (store.nodes.length === 0) {
+    store.addNode({
+      id: '1',
+      type: 'chatPair',
+      position: { x: 250, y: 5 },
+      data: { userText: '', aiText: '' }
+    })
+  }
+})
+
+function onInit(instance: any) {
+  vueFlowInstance.value = instance
 }
 
 const activeNode = computed(() => {
@@ -58,6 +74,18 @@ function createNewGraph() {
     })
   }
 }
+
+function onPaneDblClick(event: MouseEvent) {
+  if (!vueFlowInstance.value) return
+  const { x, y } = vueFlowInstance.value.project({ x: event.clientX, y: event.clientY })
+  
+  store.addNode({
+    id: crypto.randomUUID(),
+    type: 'chatPair',
+    position: { x: x - 200, y: y - 50 }, // Center the node roughly
+    data: { userText: '', aiText: '' }
+  })
+}
 </script>
 
 <template>
@@ -87,20 +115,25 @@ function createNewGraph() {
     </div>
 
     <!-- Main Area -->
-    <div class="flex-grow relative">
-      <VueFlow
-        v-model:nodes="store.nodes"
-        v-model:edges="store.edges"
-        :node-types="nodeTypes"
-        :snap-to-grid="true"
-        :snap-grid="[20, 20]"
-        class="rabbit-flow"
-        @node-click="(e) => store.setActiveNode(e.node.id)"
-        @pane-click="store.setActiveNode(null)"
-      >
-        <Background />
-        <Controls />
-      </VueFlow>
+    <div class="flex-grow relative h-full w-full" style="height: 100vh; width: 100vw;">
+      <div class="absolute inset-0" style="height: 100%; width: 100%;">
+        <VueFlow
+          v-model:nodes="store.nodes"
+          v-model:edges="store.edges"
+          :node-types="nodeTypes"
+          :snap-to-grid="true"
+          :snap-grid="[20, 20]"
+          class="rabbit-flow"
+          style="height: 100%; width: 100%;"
+          @init="onInit"
+          @node-click="(e) => store.setActiveNode(e.node.id)"
+          @pane-click="store.setActiveNode(null)"
+          @pane-dbl-click="onPaneDblClick"
+        >
+          <Background pattern-color="#334155" :gap="20" />
+          <Controls />
+        </VueFlow>
+      </div>
 
       <!-- Global Input Bar -->
       <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-900/90 backdrop-blur border-t border-gray-800 transition-transform duration-300"
@@ -141,5 +174,7 @@ function createNewGraph() {
 
 .rabbit-flow {
   background-color: #0f172a; /* gray-950 */
+  height: 100% !important;
+  width: 100% !important;
 }
 </style>
