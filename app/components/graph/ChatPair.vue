@@ -2,9 +2,10 @@
 import { Handle, Position } from '@vue-flow/core'
 import { computed } from 'vue'
 import MarkdownIt from 'markdown-it'
+import { useGraphStore } from '~/stores/graph'
 
 const props = defineProps(['id', 'data'])
-const emit = defineEmits(['update:data'])
+const store = useGraphStore()
 
 const md = new MarkdownIt()
 
@@ -14,9 +15,11 @@ const renderedAiText = computed(() => {
 
 function onUserTextChange(e: Event) {
   const target = e.target as HTMLTextAreaElement
-  // We should probably emit an event to the store to update the node data
-  // But for now, let's assume the parent handles it or we mutate data directly (Vue Flow data is reactive)
-  props.data.userText = target.value
+  store.updateNodeUserText(props.id, target.value)
+}
+
+function generate() {
+  store.generateAIResponse(props.id)
 }
 </script>
 
@@ -25,13 +28,17 @@ function onUserTextChange(e: Event) {
     <Handle type="target" :position="Position.Top" />
     
     <!-- User Header -->
-    <div class="bg-gray-800 p-3 border-b border-gray-700">
+    <div class="bg-gray-800 p-3 border-b border-gray-700 flex flex-col gap-2">
       <textarea 
         class="w-full bg-transparent text-gray-200 resize-none outline-none"
-        v-model="data.userText"
+        :value="data.userText"
+        @input="onUserTextChange"
         placeholder="Type your message..."
         rows="2"
       ></textarea>
+      <button @click="generate" class="self-end text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">
+        Send
+      </button>
     </div>
 
     <!-- AI Body -->
