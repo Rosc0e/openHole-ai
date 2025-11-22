@@ -141,3 +141,31 @@ services:
 5.  [x] **AI Backend:** Setup `/api/chat` with Vercel AI SDK + LM Studio connection.
 6.  [x] **Streaming:** Connect Backend Stream -> Frontend Node UI.
 7.  [x] **Markdown:** Integrate `markdown-it` renderer.
+
+
+
+### Phase 2. Core Interface & Navigation
+- [ ] **Global Input Bar:** Implement a fixed input bar at the bottom of the screen that binds to the `activeNodeId`. Ensure typing here updates the user text of the selected node.
+- [ ] **Node Selection Logic:** Add click handlers to `ChatPair` nodes to invoke `setActiveNode(id)` so the Global Input knows which node to target.
+- [ ] **Sidebar UI:** Create a sidebar container to house the Graph Title, "New Graph" button, "Sync" status, and Settings trigger.
+
+### Phase 3. Global Settings & Configuration
+- [ ] **Settings Store:** Add state to Pinia to handle `systemPrompt`, `aiProvider` ('openai' | 'local'), and `localBaseUrl`.
+- [ ] **Settings Modal:** Create a UI modal accessible from the sidebar to edit the global System Prompt and AI Provider configuration.
+- [ ] **Context Injection:** Update `buildContext` in `stores/graph.ts` to prepend the global `systemPrompt` to the messages array before sending to the API.
+
+### Phase 4. Data Persistence (Cloud Layer)
+- [ ] **Sync API Route:** Implement `server/api/sync.post.ts` to receive the full graph JSON and upsert it into the PostgreSQL `graphs` table.
+- [ ] **Load API Route:** Implement `server/api/graph/[id].get.ts` to retrieve a specific graph structure by ID.
+- [ ] **Auto-Save Logic:** Implement a `watch` effect in `RabbitFlow.vue` or the store that triggers the Sync API on change (with a 5-second debounce).
+- [ ] **Manual Sync:** Add a "Save/Sync" button in the UI for immediate persistence.
+
+### Phase 5. Advanced AI & Markdown Features
+- [ ] **Syntax Highlighting:** Integrate `shiki` with `markdown-it` in `ChatPair.vue` to properly render code blocks with syntax highlighting (as `shiki` is already in `package.json`).
+- [ ] **Token Estimation:** Implement a basic token counter (or estimation function) to update `node.data.tokens` after an AI response finishes.
+- [ ] **Streaming Styles:** Add the `.markdown-streaming` CSS class logic to handle unclosed code blocks visually while the AI is typing.
+
+### Phase 6. Graph Interaction Refinements
+- [ ] **Debounced Forking:** Refine the `updateNodeUserText` logic. Ensure that editing a parent node doesn't trigger a fork immediately on the first keystroke (add a small debounce or specific trigger).
+- [ ] **Node Layout Optimization:** Improve `forkNode` positioning logic. instead of a simple `+50, +50` offset, implement a smarter placement strategy so new branches don't overlap existing siblings.
+- [ ] **Graph Loading:** Update `app.vue` to check for a URL parameter (e.g., `?id=...`) and hydrate the store from the API if present, falling back to `localStorage` if not.

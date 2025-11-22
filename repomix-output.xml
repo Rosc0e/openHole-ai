@@ -1,0 +1,952 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+- Pay special attention to the Repository Instruction. These contain important context and guidelines specific to this project.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+app/
+  components/
+    graph/
+      ChatPair.vue
+      RabbitFlow.vue
+  stores/
+    graph.ts
+  app.vue
+docs/
+  TECH_SPEC.md
+public/
+  favicon.ico
+  robots.txt
+server/
+  api/
+    chat.post.ts
+  db/
+    migrations/
+      meta/
+        _journal.json
+        0000_snapshot.json
+      0000_wealthy_lady_vermin.sql
+    index.ts
+    schema.ts
+.gitignore
+AGENTS.md
+compose.yml
+Dockerfile
+drizzle.config.ts
+instruct.md
+nuxt.config.ts
+opencode.jsonc
+package.json
+README.md
+repomix.config.json
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="instruct.md">
+I want you to finish the implementation details for this app based on the repo and the TECH_SPEC doc, make sure to output boxes that the user can check off, dont output any code just the list
+</file>
+
+<file path="repomix.config.json">
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "input": {
+    "maxFileSize": 52428800
+  },
+  "output": {
+    "filePath": "repomix-output.xml",
+    "instructionFilePath": "instruct.md",
+    "style": "xml",
+    "parsableStyle": false,
+    "fileSummary": true,
+    "directoryStructure": true,
+    "files": true,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "compress": false,
+    "topFilesLength": 5,
+    "showLineNumbers": false,
+    "truncateBase64": false,
+    "copyToClipboard": true,
+    "includeFullDirectoryStructure": false,
+    "tokenCountTree": false,
+    "git": {
+      "sortByChanges": true,
+      "sortByChangesMaxCommits": 100,
+      "includeDiffs": false,
+      "includeLogs": false,
+      "includeLogsCount": 50
+    }
+  },
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDotIgnore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": []
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}
+</file>
+
+<file path="app/components/graph/RabbitFlow.vue">
+<script setup lang="ts">
+import { VueFlow } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
+import { Controls } from '@vue-flow/controls'
+import { useGraphStore } from '~/stores/graph'
+import ChatPair from './ChatPair.vue'
+
+const store = useGraphStore()
+
+const nodeTypes = {
+  chatPair: ChatPair
+}
+</script>
+
+<template>
+  <div class="h-screen w-screen">
+    <VueFlow
+      v-model:nodes="store.nodes"
+      v-model:edges="store.edges"
+      :node-types="nodeTypes"
+      :snap-to-grid="true"
+      :snap-grid="[20, 20]"
+      class="rabbit-flow"
+    >
+      <Background />
+      <Controls />
+    </VueFlow>
+  </div>
+</template>
+
+<style>
+@import '@vue-flow/core/dist/style.css';
+@import '@vue-flow/core/dist/theme-default.css';
+@import '@vue-flow/controls/dist/style.css';
+@import '@vue-flow/minimap/dist/style.css';
+</style>
+</file>
+
+<file path="app/app.vue">
+<script setup lang="ts">
+import RabbitFlow from '~/components/graph/RabbitFlow.vue'
+</script>
+
+<template>
+  <div>
+    <NuxtRouteAnnouncer />
+    <RabbitFlow />
+  </div>
+</template>
+</file>
+
+<file path="public/robots.txt">
+User-Agent: *
+Disallow:
+</file>
+
+<file path="server/db/migrations/meta/_journal.json">
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1763793643870,
+      "tag": "0000_wealthy_lady_vermin",
+      "breakpoints": true
+    }
+  ]
+}
+</file>
+
+<file path="server/db/migrations/meta/0000_snapshot.json">
+{
+  "id": "29e08a1d-52cd-49a8-b9e8-f9b74a9e4c24",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.graphs": {
+      "name": "graphs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
+</file>
+
+<file path="server/db/migrations/0000_wealthy_lady_vermin.sql">
+CREATE TABLE "graphs" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"title" text,
+	"content" jsonb,
+	"updated_at" timestamp DEFAULT now()
+);
+</file>
+
+<file path="server/db/index.ts">
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
+import * as schema from './schema'
+
+const connectionString = process.env.DATABASE_URL!
+const client = postgres(connectionString)
+export const db = drizzle(client, { schema })
+</file>
+
+<file path="server/db/schema.ts">
+import { pgTable, uuid, text, jsonb, timestamp } from 'drizzle-orm/pg-core'
+
+export const graphs = pgTable('graphs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title'),
+  content: jsonb('content'), // Stores { nodes: [], edges: [] }
+  updatedAt: timestamp('updated_at').defaultNow()
+})
+</file>
+
+<file path=".gitignore">
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+</file>
+
+<file path="AGENTS.md">
+Use the context7 mcp tool to look up documentation. 
+If you are unsure how to do something, use `gh_grep` to search code examples from github.
+
+
+## Git 
+
+- **Commit Often:** Keep commits small, focused, and shareable to simplify integration and prevent merge conflicts. Only commit complete, logical components. Use Git‘s «Stash» feature for temporary changes to maintain a clean working directory.
+- **Commit Related Changes:** Each commit should encapsulate a single, related change (e.g., one bug fix per commit). This enhances clarity for reviewers and simplifies rollbacks. Use Git's staging area for granular commits.
+- **Use Branches:** Leverage Git‘s branching capabilities extensively for features, bug fixes, and experiments to isolate different development lines.
+
+- **Commit Specification (Conventional Commits):**
+  The keywords “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” are interpreted as described in RFC 2119.
+  *   **Format:** `<type>[scope][!]: <description>`
+  *   **Type (MUST):** A noun (e.g., `feat`, `fix`). `feat` for new features, `fix` for bug fixes. Other types (e.g., `docs`, `chore`) MAY be used.
+  *   **Scope (OPTIONAL):** A noun in parenthesis describing a codebase section (e.g., `fix(parser):`).
+  *   **Breaking Change Indicator (OPTIONAL):** `!` immediately before `:` signals a breaking change.
+  *   **Description (MUST):** A short summary of changes, immediately following the colon and space.
+  *   **Body (OPTIONAL):** Longer, free-form contextual information, one blank line after the description.
+  *   **Footers (OPTIONAL):** One or more lines, one blank line after the body.
+      *   **Format:** `token: <value>` or `token #<value>`.
+      *   **Token:** Uses `-` in place of whitespace (e.g., `Acked-by`). `BREAKING CHANGE` or `BREAKING-CHANGE` is an exception and MAY also be used as a token.
+  *   **Breaking Changes (MUST):** Indicated by `!` in the prefix or a `BREAKING CHANGE:` footer. If `!` is used, the commit description SHALL detail the breaking change, and the footer is OPTIONAL.
+  *   **Case Sensitivity:** Units are not case-sensitive, except `BREAKING CHANGE` which MUST be uppercase. `BREAKING-CHANGE` is synonymous with `BREAKING CHANGE` in footers.
+
+## misc
+- use podman instead of docker
+</file>
+
+<file path="compose.yml">
+services:
+  rabbit-app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/rabbitnode
+      - NUXT_OPENAI_API_KEY=${OPENAI_KEY}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=rabbitnode
+
+volumes:
+  pg_data:
+</file>
+
+<file path="Dockerfile">
+FROM oven/bun:1 as base
+WORKDIR /app
+
+# install dependencies
+COPY package.json bun.lock ./
+RUN bun install
+
+# copy source
+COPY . .
+
+# build
+RUN bun run build
+
+# start
+CMD ["bun", ".output/server/index.mjs"]
+</file>
+
+<file path="drizzle.config.ts">
+import { defineConfig } from 'drizzle-kit'
+
+export default defineConfig({
+  schema: './server/db/schema.ts',
+  out: './server/db/migrations',
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+})
+</file>
+
+<file path="nuxt.config.ts">
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2025-07-15',
+  devtools: { enabled: true },
+  modules: [
+    '@nuxt/ui',
+    '@pinia/nuxt',
+    '@vueuse/nuxt'
+  ],
+  colorMode: {
+    preference: 'dark'
+  }
+})
+</file>
+
+<file path="opencode.jsonc">
+{
+  "$schema": "https://opencode.ai/config.json",
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "openHole-ai",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.71",
+    "@nuxt/ui": "^4.2.1",
+    "@pinia/nuxt": "^0.11.3",
+    "@vue-flow/background": "^1.3.2",
+    "@vue-flow/controls": "^1.1.3",
+    "@vue-flow/core": "^1.48.0",
+    "@vue-flow/minimap": "^1.5.4",
+    "@vueuse/core": "^14.0.0",
+    "ai": "^5.0.99",
+    "drizzle-orm": "^0.44.7",
+    "markdown-it": "^14.1.0",
+    "nuxt": "^4.2.1",
+    "pinia": "^3.0.4",
+    "postgres": "^3.4.7",
+    "shiki": "^3.15.0",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/pg": "^8.15.6",
+    "@vueuse/nuxt": "^14.0.0",
+    "drizzle-kit": "^0.31.7"
+  }
+}
+</file>
+
+<file path="README.md">
+# Nuxt Minimal Starter
+
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+
+## Setup
+
+Make sure to install dependencies:
+
+```bash
+# npm
+npm install
+
+# pnpm
+pnpm install
+
+# yarn
+yarn install
+
+# bun
+bun install
+```
+
+## Development Server
+
+Start the development server on `http://localhost:3000`:
+
+```bash
+# npm
+npm run dev
+
+# pnpm
+pnpm dev
+
+# yarn
+yarn dev
+
+# bun
+bun run dev
+```
+
+## Production
+
+Build the application for production:
+
+```bash
+# npm
+npm run build
+
+# pnpm
+pnpm build
+
+# yarn
+yarn build
+
+# bun
+bun run build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+</file>
+
+<file path="tsconfig.json">
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "files": [],
+  "references": [
+    {
+      "path": "./.nuxt/tsconfig.app.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.server.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.shared.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.node.json"
+    }
+  ]
+}
+</file>
+
+<file path="app/components/graph/ChatPair.vue">
+<script setup lang="ts">
+import { Handle, Position } from '@vue-flow/core'
+import { computed } from 'vue'
+import MarkdownIt from 'markdown-it'
+import { useGraphStore } from '~/stores/graph'
+
+const props = defineProps(['id', 'data'])
+const store = useGraphStore()
+
+const md = new MarkdownIt()
+
+const renderedAiText = computed(() => {
+  return md.render(props.data.aiText || '')
+})
+
+function onUserTextChange(e: Event) {
+  const target = e.target as HTMLTextAreaElement
+  store.updateNodeUserText(props.id, target.value)
+}
+
+function generate() {
+  store.generateAIResponse(props.id)
+}
+</script>
+
+<template>
+  <div class="chat-pair-node bg-gray-900 border border-gray-700 rounded-lg w-[400px] overflow-hidden shadow-lg text-white">
+    <Handle type="target" :position="Position.Top" />
+    
+    <!-- User Header -->
+    <div class="bg-gray-800 p-3 border-b border-gray-700 flex flex-col gap-2">
+      <textarea 
+        class="w-full bg-transparent text-gray-200 resize-none outline-none"
+        :value="data.userText"
+        @input="onUserTextChange"
+        placeholder="Type your message..."
+        rows="2"
+      ></textarea>
+      <button @click="generate" class="self-end text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">
+        Send
+      </button>
+    </div>
+
+    <!-- AI Body -->
+    <div class="bg-gray-900 p-4 min-h-[100px]">
+      <div v-if="data.aiText" v-html="renderedAiText" class="prose prose-invert max-w-none"></div>
+      <div v-else class="text-gray-500 italic">AI is thinking...</div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="bg-gray-950 px-3 py-1 text-xs text-gray-500 flex justify-between">
+      <span>{{ data.model || 'GPT-4' }}</span>
+      <span>{{ data.tokens || 0 }} tokens</span>
+    </div>
+
+    <Handle type="source" :position="Position.Bottom" />
+  </div>
+</template>
+</file>
+
+<file path="app/stores/graph.ts">
+import { defineStore } from 'pinia'
+import { useStorage } from '@vueuse/core'
+import { ref } from 'vue'
+import type { Node, Edge } from '@vue-flow/core'
+
+export const useGraphStore = defineStore('graph', () => {
+  const nodes = useStorage<Node[]>('rabbit-nodes', [
+    {
+      id: '1',
+      type: 'chatPair',
+      position: { x: 250, y: 5 },
+      data: { userText: 'Hello world', aiText: 'Hi there! How can I help you today?' }
+    }
+  ])
+  const edges = useStorage<Edge[]>('rabbit-edges', [])
+  const activeNodeId = ref<string | null>(null)
+
+  function addNode(node: Node) {
+    nodes.value.push(node)
+  }
+
+  function setActiveNode(id: string | null) {
+    activeNodeId.value = id
+  }
+
+  function forkNode(originalNodeId: string, newText: string) {
+    const originalNode = nodes.value.find(n => n.id === originalNodeId)
+    if (!originalNode) return
+
+    const newNodeId = crypto.randomUUID()
+    const newNode: Node = {
+      id: newNodeId,
+      type: 'chatPair',
+      position: { x: originalNode.position.x + 50, y: originalNode.position.y + 50 }, // Simple offset for now
+      data: { ...originalNode.data, userText: newText, aiText: '' } // Reset AI text for new branch
+    }
+
+    nodes.value.push(newNode)
+
+    // Find parent edge
+    const parentEdge = edges.value.find(e => e.target === originalNodeId)
+    if (parentEdge) {
+      edges.value.push({
+        id: `e${parentEdge.source}-${newNodeId}`,
+        source: parentEdge.source,
+        target: newNodeId
+      })
+    }
+
+    setActiveNode(newNodeId)
+  }
+
+  function updateNodeUserText(nodeId: string, text: string) {
+    const node = nodes.value.find(n => n.id === nodeId)
+    if (!node) return
+
+    // Check if node has children
+    const hasChildren = edges.value.some(e => e.source === nodeId)
+
+    if (hasChildren) {
+      forkNode(nodeId, text)
+    } else {
+      node.data.userText = text
+    }
+  }
+
+  function getParentNode(nodeId: string): Node | undefined {
+    const edge = edges.value.find(e => e.target === nodeId)
+    if (!edge) return undefined
+    return nodes.value.find(n => n.id === edge.source)
+  }
+
+  function buildContext(nodeId: string) {
+    const messages = []
+    let currentNode: Node | undefined = nodes.value.find(n => n.id === nodeId)
+
+    while (currentNode) {
+      if (currentNode.data.aiText) {
+        messages.unshift({ role: 'assistant', content: currentNode.data.aiText })
+      }
+      if (currentNode.data.userText) {
+        messages.unshift({ role: 'user', content: currentNode.data.userText })
+      }
+      currentNode = getParentNode(currentNode.id)
+    }
+    return messages
+  }
+
+  async function generateAIResponse(nodeId: string) {
+    const node = nodes.value.find(n => n.id === nodeId)
+    if (!node) return
+
+    const messages = buildContext(nodeId)
+    node.data.aiText = '' // Clear previous response if any
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      })
+
+      if (!response.body) return
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        node.data.aiText += chunk
+      }
+    } catch (error) {
+      console.error('Error generating AI response:', error)
+      node.data.aiText = 'Error generating response.'
+    }
+  }
+
+  return {
+    nodes,
+    edges,
+    activeNodeId,
+    addNode,
+    setActiveNode,
+    forkNode,
+    updateNodeUserText,
+    generateAIResponse
+  }
+})
+</file>
+
+<file path="docs/TECH_SPEC.md">
+# Technical Specification: RabbitNode
+
+## 1. Project Overview
+**RabbitNode** is a personal, node-based AI chat interface designed for non-linear conversation branching.
+*   **Core Philosophy:** "Explore every rabbit hole." Users can fork conversations at any point without losing context.
+*   **Target Environment:** Self-hosted VPS (Docker) + Local-First Logic.
+
+## 2. Technology Stack
+
+### Core Runtime
+*   **Server Runtime:** Bun (v1.1+)
+*   **Framework:** Nuxt 4 (Vue 3.5+)
+*   **Language:** TypeScript (Strict for DB/API, Loose for Graph Interactions)
+
+### Interface & Graph
+*   **Graph Engine:** `@vue-flow/core`
+*   **UI Library:** `@nuxt/ui` (Tailwind CSS based)
+*   **Markdown Engine:** `markdown-it` + `shiki` (for syntax highlighting)
+
+### Data & State
+*   **Local State:** Pinia (persisted via `@vueuse/core` `useStorage`)
+*   **Remote Storage:** PostgreSQL 16
+*   **ORM:** Drizzle ORM (`drizzle-orm`, `drizzle-kit`)
+*   **AI SDK:** Vercel AI SDK (`ai` core package)
+
+---
+
+## 3. Architecture & Data Flow
+
+### A. The Hybrid Data Strategy
+We prioritize local speed (instant load) with server-side backup.
+
+1.  **Local Layer (Primary):**
+    *   The entire graph state lives in `localStorage` (IndexedDB wrapper).
+    *   Pinia store `graphStore` hydrates from here on boot.
+2.  **Cloud Layer (Backup/Sync):**
+    *   **PostgreSQL** acts as a "Save Slot".
+    *   **Sync Trigger:** Manual "Sync" button or Auto-save on idle (debounce 5s).
+    *   **Endpoint:** `POST /api/sync` accepts a raw JSON dump of the graph.
+    *   **Schema (Drizzle):**
+        ```typescript
+        export const graphs = pgTable('graphs', {
+          id: uuid('id').primaryKey().defaultRandom(),
+          title: text('title'),
+          content: jsonb('content'), // Stores { nodes: [], edges: [] }
+          updatedAt: timestamp('updated_at').defaultNow()
+        });
+        ```
+
+### B. AI Generation Pipeline
+1.  **Trigger:** User selects a node -> types in Global Input -> clicks Send.
+2.  **Context Build:** Client traverses the graph backwards (Selected Node $\to$ Parent $\to$ Root).
+3.  **Payload:** Client constructs `messages` array + prepends **Global System Prompt**.
+4.  **Request:** Sent to `/api/chat` (Nitro Server Route).
+5.  **Provider:** Server connects to `openai` or `lm-studio` (based on config).
+6.  **Streaming:**
+    *   Server streams text chunks.
+    *   Client updates `activeNode.data.aiText` reactively.
+    *   **Markdown Handling:** The Markdown renderer receives raw partial strings. We use a specialized CSS class `.markdown-streaming` to handle unclosed code blocks gracefully during generation so the UI doesn't "jump."
+
+---
+
+## 4. User Experience (UX) Specification
+
+### A. Canvas & Navigation
+*   **Interaction:** Infinite Pan/Zoom.
+*   **Snapping:** Enabled (Grid: `[20, 20]`).
+*   **Selection:** Clicking a node makes it "Active." The Global Input bar always targets the "Active" node.
+
+### B. The "Chat Pair" Node
+Each node represents a full "Turn" (User + AI).
+*   **Header (User):** Lighter Gray background. Editable text area.
+*   **Body (AI):** Darker Gray background. Markdown rendered content.
+*   **Metadata:** Displays Model Name (e.g., "GPT-4") and Token Count (approx).
+
+### C. Branching & Auto-Forking Logic
+This is the critical "Time Travel" feature.
+*   **Scenario:** User selects a Node that *already has children* and edits the User Prompt (Header).
+*   **Action:**
+    1.  **Clone:** A new Sibling Node is created immediately.
+    2.  **Link:** The new node connects to the *same parent* as the original node.
+    3.  **State:** The new node becomes "Active."
+    4.  **Data:** The edited text is applied to this *new* node. The original node remains untouched.
+    5.  **Result:** The graph splits visually, preserving the old conversation path while starting a new one.
+
+### D. Global Settings
+A modal accessible via the sidebar.
+1.  **System Prompt:** Textarea (Default: "You are a helpful AI assistant...").
+2.  **Provider Config:** Toggle between "Cloud (OpenAI)" and "Local (LM Studio)".
+3.  **Base URL:** Input field for Local URL (default: `http://localhost:1234/v1`).
+
+---
+
+## 5. Infrastructure & Deployment
+
+### Docker Compose Configuration
+The `compose.yml` defines the production stack.
+
+```yaml
+services:
+  rabbit-app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/rabbitnode
+      - NUXT_OPENAI_API_KEY=${OPENAI_KEY}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=rabbitnode
+```
+
+### Developer Experience (DX) Standards
+*   **Type Safety:**
+    *   **Strict:** Drizzle Schemas, API Request Bodies.
+    *   **Loose:** Vue Flow Events (allowing `any` for complex drag/drop payloads).
+*   **Code Structure:**
+    *   `/server/api` - Nitro Routes.
+    *   `/server/db` - Drizzle Schema & Config.
+    *   `/stores` - Pinia Graph Logic (actions for `addNode`, `forkNode`).
+    *   `/components/graph` - Custom Node UI.
+
+---
+
+## 6. Implementation Checklist (Phase 1)
+
+1.  [x] **Init:** `bun create nuxt` + Install Vue Flow, Nuxt UI, Pinia, Drizzle.
+2.  [x] **Database:** Setup Postgres container and run Drizzle migration.
+3.  [x] **Canvas:** Render `<VueFlow>` with `ChatPair` component (Visuals only).
+4.  [x] **Store:** Build `useGraphStore` to handle `addNode` and `forkNode` logic.
+5.  [x] **AI Backend:** Setup `/api/chat` with Vercel AI SDK + LM Studio connection.
+6.  [x] **Streaming:** Connect Backend Stream -> Frontend Node UI.
+7.  [x] **Markdown:** Integrate `markdown-it` renderer.
+</file>
+
+<file path="server/api/chat.post.ts">
+import { streamText } from 'ai'
+import { createOpenAI } from '@ai-sdk/openai'
+
+export default defineEventHandler(async (event) => {
+  const { messages, provider, baseUrl } = await readBody(event)
+
+  let model
+
+  if (provider === 'local') {
+    const localOpenAI = createOpenAI({
+      baseURL: baseUrl || 'http://localhost:1234/v1',
+      apiKey: 'not-needed',
+    })
+    model = localOpenAI('local-model')
+  } else {
+    const openai = createOpenAI({
+      apiKey: process.env.NUXT_OPENAI_API_KEY,
+    })
+    model = openai('gpt-4o')
+  }
+
+  const result = streamText({
+    model,
+    messages,
+  })
+
+  return result.toTextStreamResponse()
+})
+</file>
+
+</files>
+
+
+
+<instruction>
+I want you to finish the implementation details for this app based on the repo and the TECH_SPEC doc, make sure to output boxes that the user can check off, dont output any code just the list
+
+</instruction>

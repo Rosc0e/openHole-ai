@@ -14,6 +14,15 @@ export const useGraphStore = defineStore('graph', () => {
   ])
   const edges = useStorage<Edge[]>('rabbit-edges', [])
   const activeNodeId = ref<string | null>(null)
+  const graphId = useStorage('rabbit-graph-id', crypto.randomUUID())
+  const graphTitle = useStorage('rabbit-graph-title', 'Untitled Graph')
+  const isSyncing = ref(false)
+  const lastSyncedAt = ref<Date | null>(null)
+
+  // Global Settings
+  const systemPrompt = useStorage('rabbit-system-prompt', 'You are a helpful AI assistant.')
+  const aiProvider = useStorage<'openai' | 'local'>('rabbit-ai-provider', 'openai')
+  const localBaseUrl = useStorage('rabbit-local-base-url', 'http://localhost:1234/v1')
 
   function addNode(node: Node) {
     nodes.value.push(node)
@@ -27,24 +36,36 @@ export const useGraphStore = defineStore('graph', () => {
     const originalNode = nodes.value.find(n => n.id === originalNodeId)
     if (!originalNode) return
 
+    // Find all siblings (nodes that share the same parent)
+    const parentEdge = edges.value.find(e => e.target === originalNodeId)
+    let siblingCount = 0
+    if (parentEdge) {
+      siblingCount = edges.value.filter(e => e.source === parentEdge.source).length
+    }
+
     const newNodeId = crypto.randomUUID()
     const newNode: Node = {
       id: newNodeId,
       type: 'chatPair',
-      position: { x: originalNode.position.x + 50, y: originalNode.position.y + 50 }, // Simple offset for now
-      data: { ...originalNode.data, userText: newText, aiText: '' } // Reset AI text for new branch
+      // Offset based on sibling count to avoid overlap
+      position: { 
+        x: originalNode.position.x + 450, // Move right
+        y: originalNode.position.y + (siblingCount * 100) // Move down based on siblings
+      },
+      data: { ...originalNode.data, userText: newText, aiText: '', tokens: 0 } // Reset AI text for new branch
     }
 
     nodes.value.push(newNode)
 
-    // Find parent edge
-    const parentEdge = edges.value.find(e => e.target === originalNodeId)
     if (parentEdge) {
       edges.value.push({
         id: `e${parentEdge.source}-${newNodeId}`,
         source: parentEdge.source,
         target: newNodeId
       })
+    } else {
+      // If it's a root node fork (unlikely but possible if we allow multiple roots), just place it near
+       newNode.position = { x: originalNode.position.x + 450, y: originalNode.position.y }
     }
 
     setActiveNode(newNodeId)
@@ -83,6 +104,12 @@ export const useGraphStore = defineStore('graph', () => {
       }
       currentNode = getParentNode(currentNode.id)
     }
+    
+    // Prepend System Prompt
+    if (systemPrompt.value) {
+      messages.unshift({ role: 'system', content: systemPrompt.value })
+    }
+    
     return messages
   }
 
@@ -97,7 +124,11 @@ export const useGraphStore = defineStore('graph', () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages })
+        body: JSON.stringify({ 
+          messages,
+          provider: aiProvider.value,
+          baseUrl: localBaseUrl.value
+        })
       })
 
       if (!response.body) return
@@ -110,6 +141,8 @@ export const useGraphStore = defineStore('graph', () => {
         if (done) break
         const chunk = decoder.decode(value, { stream: true })
         node.data.aiText += chunk
+        // Estimate tokens (approx 4 chars per token)
+        node.data.tokens = Math.ceil(node.data.aiText.length / 4)
       }
     } catch (error) {
       console.error('Error generating AI response:', error)
@@ -117,14 +150,67 @@ export const useGraphStore = defineStore('graph', () => {
     }
   }
 
+  async function syncGraph() {
+    if (isSyncing.value) return
+    isSyncing.value = true
+
+    try {
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: graphId.value,
+          title: graphTitle.value,
+          content: {
+            nodes: nodes.value,
+            edges: edges.value
+          }
+        })
+      })
+      lastSyncedAt.value = new Date()
+    } catch (error) {
+      console.error('Failed to sync graph:', error)
+    } finally {
+      isSyncing.value = false
+    }
+  }
+
+  async function loadGraph(id: string) {
+    try {
+      const response = await fetch(`/api/graph/${id}`)
+      if (!response.ok) throw new Error('Failed to load graph')
+      const data = await response.json()
+      
+      if (data && data.content) {
+        // @ts-ignore
+        nodes.value = data.content.nodes || []
+        // @ts-ignore
+        edges.value = data.content.edges || []
+        graphId.value = data.id
+        graphTitle.value = data.title || 'Untitled Graph'
+      }
+    } catch (error) {
+      console.error('Failed to load graph:', error)
+    }
+  }
+
   return {
     nodes,
     edges,
     activeNodeId,
+    graphId,
+    graphTitle,
+    isSyncing,
+    lastSyncedAt,
+    systemPrompt,
+    aiProvider,
+    localBaseUrl,
     addNode,
     setActiveNode,
     forkNode,
     updateNodeUserText,
-    generateAIResponse
+    generateAIResponse,
+    syncGraph,
+    loadGraph
   }
 })
