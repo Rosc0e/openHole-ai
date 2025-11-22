@@ -88,13 +88,13 @@ onMounted(() => {
 
 <template>
   <div 
-    class="chat-pair-node bg-gray-900/95 backdrop-blur border rounded-xl w-[450px] overflow-hidden shadow-2xl transition-all duration-200 group"
+    class="chat-pair-node bg-gray-900 border rounded-xl w-[450px] overflow-hidden shadow-2xl transition-all duration-200 group"
     :class="selected ? 'border-blue-500 ring-2 ring-blue-500/50 shadow-blue-900/20' : 'border-gray-700 hover:border-gray-600'"
   >
     <Handle type="target" :position="Position.Top" class="!bg-blue-500 !w-3 !h-3" />
     
     <!-- User Header -->
-    <div class="bg-gray-800/50 p-4 border-b border-gray-700/50">
+    <div class="bg-gray-800 p-4 border-b border-gray-700">
       <div class="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider">User</div>
       <textarea 
         class="w-full bg-transparent text-gray-100 resize-none outline-none placeholder-gray-600 text-sm leading-relaxed"
@@ -106,7 +106,7 @@ onMounted(() => {
     </div>
 
     <!-- AI Body -->
-    <div class="bg-gray-900/50 p-4 min-h-[100px]">
+    <div class="bg-gray-900 p-4 min-h-[100px]">
       <div class="text-xs font-semibold text-purple-400 mb-2 uppercase tracking-wider">Assistant</div>
       <div v-if="data.aiText" v-html="renderedContent" class="prose prose-invert prose-sm max-w-none"></div>
       <div v-else class="text-gray-600 italic text-sm flex items-center gap-2">
@@ -116,7 +116,7 @@ onMounted(() => {
     </div>
 
     <!-- Metadata -->
-    <div class="bg-gray-950/80 px-4 py-2 text-[10px] text-gray-500 flex justify-between items-center border-t border-gray-800/50">
+    <div class="bg-gray-950 px-4 py-2 text-[10px] text-gray-500 flex justify-between items-center border-t border-gray-800">
       <span class="flex items-center gap-1">
         <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
         {{ data.model || 'GPT-4' }}
