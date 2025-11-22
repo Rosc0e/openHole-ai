@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { VueFlow, useVueFlow, ConnectionLineType, PanOnScrollMode } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { useGraphStore } from '~/stores/graph'
 import ChatPair from './ChatPair.vue'
+import ContextMenu from './ContextMenu.vue'
 import SettingsModal from '~/components/SettingsModal.vue'
 import { ref, computed, watch, onMounted, markRaw } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
@@ -11,9 +12,22 @@ import { useDebounceFn } from '@vueuse/core'
 const store = useGraphStore()
 const vueFlowInstance = ref<any>(null)
 const isSettingsOpen = ref(false)
+const connectingNodeId = ref<string | null>(null)
+
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  flowX: 0,
+  flowY: 0
+})
 
 const nodeTypes = {
   chatPair: markRaw(ChatPair)
+}
+
+const defaultEdgeOptions = {
+  type: 'smoothstep',
 }
 
 onMounted(() => {
@@ -75,14 +89,67 @@ function createNewGraph() {
   }
 }
 
-function onPaneDblClick(event: MouseEvent) {
-  if (!vueFlowInstance.value) return
-  const { x, y } = vueFlowInstance.value.project({ x: event.clientX, y: event.clientY })
+function onConnectStart({ nodeId }: { nodeId?: string }) {
+  if (nodeId) {
+    connectingNodeId.value = nodeId
+  }
+}
+
+function onConnectEnd(event: any) {
+  if (!connectingNodeId.value || !vueFlowInstance.value) return
+
+  const targetIsPane = event.target?.classList?.contains('vue-flow__pane')
   
+  if (targetIsPane) {
+    const { x, y } = vueFlowInstance.value.project({ x: event.clientX, y: event.clientY })
+    const newNodeId = `node-${Date.now()}`
+    
+    // Create new node
+    store.addNode({
+      id: newNodeId,
+      type: 'chatPair',
+      position: { x: x - 225, y: y - 50 },
+      data: { userText: '', aiText: '' }
+    })
+
+    // Connect source node to new node
+    store.edges.push({
+      id: `e${connectingNodeId.value}-${newNodeId}`,
+      source: connectingNodeId.value,
+      target: newNodeId,
+      type: 'smoothstep'
+    })
+  }
+  
+  connectingNodeId.value = null
+}
+
+function onPaneContextMenu(event: MouseEvent) {
+  event.preventDefault()
+  
+  if (!vueFlowInstance.value) return
+
+  // Calculate flow position for node creation
+  const { x, y } = vueFlowInstance.value.project({ x: event.clientX, y: event.clientY })
+
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    flowX: x,
+    flowY: y
+  }
+}
+
+function onPaneClick() {
+  contextMenu.value.visible = false
+}
+
+function onCreateNodeFromMenu() {
   store.addNode({
-    id: crypto.randomUUID(),
+    id: `node-${Date.now()}`,
     type: 'chatPair',
-    position: { x: x - 200, y: y - 50 }, // Center the node roughly
+    position: { x: contextMenu.value.flowX - 225, y: contextMenu.value.flowY - 50 },
     data: { userText: '', aiText: '' }
   })
 }
@@ -121,18 +188,37 @@ function onPaneDblClick(event: MouseEvent) {
           v-model:nodes="store.nodes"
           v-model:edges="store.edges"
           :node-types="nodeTypes"
+          :default-edge-options="defaultEdgeOptions"
+          :connection-line-type="ConnectionLineType.SmoothStep"
           :snap-to-grid="true"
           :snap-grid="[20, 20]"
+          :zoom-on-double-click="false"
+          :pan-on-double-click="false"
+          :pan-on-scroll="true"
+          :pan-on-scroll-mode="PanOnScrollMode.Free"
+          :zoom-on-scroll="false"
+          :pan-on-drag="false"
+          pan-activation-key-code="g"
           class="rabbit-flow"
           style="height: 100%; width: 100%;"
           @init="onInit"
           @node-click="(e) => store.setActiveNode(e.node.id)"
-          @pane-click="store.setActiveNode(null)"
-          @pane-dbl-click="onPaneDblClick"
+          @pane-click="onPaneClick"
+          @pane-context-menu="onPaneContextMenu"
+          @connect-start="onConnectStart"
+          @connect-end="onConnectEnd"
         >
           <Background pattern-color="#334155" :gap="20" />
           <Controls />
         </VueFlow>
+        
+        <ContextMenu 
+          v-if="contextMenu.visible"
+          :x="contextMenu.x"
+          :y="contextMenu.y"
+          @close="contextMenu.visible = false"
+          @create-node="onCreateNodeFromMenu"
+        />
       </div>
 
       <!-- Global Input Bar -->
