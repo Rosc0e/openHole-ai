@@ -91,7 +91,7 @@ onMounted(() => {
     class="chat-pair-node bg-gray-900 border rounded-xl w-[450px] overflow-hidden shadow-2xl transition-all duration-200 group"
     :class="selected ? 'border-blue-500 ring-2 ring-blue-500/50 shadow-blue-900/20' : 'border-gray-700 hover:border-gray-600'"
   >
-    <Handle type="target" :position="Position.Top" class="!bg-blue-500 !w-3 !h-3" />
+    <Handle type="target" :position="Position.Left" class="!bg-blue-500 !w-3 !h-3 !-left-1.5" />
     
     <!-- User Header -->
     <div class="bg-gray-800 p-4 border-b border-gray-700">
@@ -124,7 +124,7 @@ onMounted(() => {
       <span class="font-mono">{{ data.tokens || 0 }} tokens</span>
     </div>
 
-    <Handle type="source" :position="Position.Bottom" class="!bg-purple-500 !w-3 !h-3" />
+    <Handle type="source" :position="Position.Right" class="!bg-purple-500 !w-3 !h-3 !-right-1.5" />
   </div>
 </template>
 
