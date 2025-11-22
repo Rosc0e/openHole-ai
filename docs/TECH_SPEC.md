@@ -134,10 +134,10 @@ services:
 
 ## 6. Implementation Checklist (Phase 1)
 
-1.  [ ] **Init:** `bun create nuxt` + Install Vue Flow, Nuxt UI, Pinia, Drizzle.
-2.  [ ] **Database:** Setup Postgres container and run Drizzle migration.
-3.  [ ] **Canvas:** Render `<VueFlow>` with `ChatPair` component (Visuals only).
-4.  [ ] **Store:** Build `useGraphStore` to handle `addNode` and `forkNode` logic.
-5.  [ ] **AI Backend:** Setup `/api/chat` with Vercel AI SDK + LM Studio connection.
-6.  [ ] **Streaming:** Connect Backend Stream -> Frontend Node UI.
-7.  [ ] **Markdown:** Integrate `markdown-it` renderer.
+1.  [x] **Init:** `bun create nuxt` + Install Vue Flow, Nuxt UI, Pinia, Drizzle.
+2.  [x] **Database:** Setup Postgres container and run Drizzle migration.
+3.  [x] **Canvas:** Render `<VueFlow>` with `ChatPair` component (Visuals only).
+4.  [x] **Store:** Build `useGraphStore` to handle `addNode` and `forkNode` logic.
+5.  [x] **AI Backend:** Setup `/api/chat` with Vercel AI SDK + LM Studio connection.
+6.  [x] **Streaming:** Connect Backend Stream -> Frontend Node UI.
+7.  [x] **Markdown:** Integrate `markdown-it` renderer.
