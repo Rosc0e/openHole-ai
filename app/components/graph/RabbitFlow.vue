@@ -199,6 +199,7 @@ function onCreateNodeFromMenu() {
           :zoom-on-scroll="false"
           :pan-on-drag="false"
           pan-activation-key-code="g"
+          zoom-activation-key-code="Shift"
           class="rabbit-flow"
           style="height: 100%; width: 100%;"
           @init="onInit"
