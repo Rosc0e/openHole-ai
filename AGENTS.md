@@ -1,6 +1,7 @@
 
 Use the context7 mcp tool to look up documentation. 
 If you are unsure how to do something, use `gh_grep` to search code examples from github.
+in your gh_grep querys include the keyword vue 
 
 
 ## Git 
@@ -23,6 +24,8 @@ If you are unsure how to do something, use `gh_grep` to search code examples fro
   *   **Breaking Changes (MUST):** Indicated by `!` in the prefix or a `BREAKING CHANGE:` footer. If `!` is used, the commit description SHALL detail the breaking change, and the footer is OPTIONAL.
   *   **Case Sensitivity:** Units are not case-sensitive, except `BREAKING CHANGE` which MUST be uppercase. `BREAKING-CHANGE` is synonymous with `BREAKING CHANGE` in footers.
 
+
+when the user asks for a change thats a good time to commit the previous ones 
 ## misc
 - use podman instead of docker
 

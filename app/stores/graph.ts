@@ -21,8 +21,13 @@ export const useGraphStore = defineStore('graph', () => {
 
   // Global Settings
   const systemPrompt = useStorage('rabbit-system-prompt', 'You are a helpful AI assistant.')
-  const aiProvider = useStorage<'openai' | 'local'>('rabbit-ai-provider', 'openai')
+  const aiProvider = useStorage<'openai' | 'local'>('rabbit-ai-provider', 'local')
   const localBaseUrl = useStorage('rabbit-local-base-url', 'http://localhost:1234/v1')
+  const apiKey = useStorage('rabbit-api-key', '')
+  const modelName = useStorage('rabbit-model-name', '')
+  const availableModels = ref<string[]>([])
+  const isFetchingModels = ref(false)
+  const fetchError = ref<string | null>(null)
 
   function addNode(node: Node) {
     nodes.value.push(node)
@@ -85,6 +90,12 @@ export const useGraphStore = defineStore('graph', () => {
     }
   }
 
+  function updateNodePreferredModel(nodeId: string, model: string | null) {
+    const node = nodes.value.find(n => n.id === nodeId)
+    if (!node) return
+    node.data.preferredModel = model
+  }
+
   function getParentNode(nodeId: string): Node | undefined {
     const edge = edges.value.find(e => e.target === nodeId)
     if (!edge) return undefined
@@ -119,30 +130,83 @@ export const useGraphStore = defineStore('graph', () => {
 
     const messages = buildContext(nodeId)
     node.data.aiText = '' // Clear previous response if any
+    
+    // Determine model to use: node-specific preference or global default
+    const modelToUse = node.data.preferredModel || modelName.value
+    node.data.model = modelToUse // Store the model used for this generation
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages,
-          provider: aiProvider.value,
-          baseUrl: localBaseUrl.value
+      if (aiProvider.value === 'local') {
+        // Client-side generation for Local provider using native fetch to avoid server-side SDK issues
+        const baseUrl = localBaseUrl.value.replace(/\/$/, '')
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: modelToUse || 'local-model',
+            messages: messages,
+            stream: true
+          })
         })
-      })
 
-      if (!response.body) return
+        if (!response.body) throw new Error('No response body')
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        node.data.aiText += chunk
-        // Estimate tokens (approx 4 chars per token)
-        node.data.tokens = Math.ceil(node.data.aiText.length / 4)
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed || trimmed === 'data: [DONE]') continue
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(trimmed.slice(6))
+                const content = data.choices?.[0]?.delta?.content || ''
+                if (content) {
+                  node.data.aiText += content
+                  node.data.tokens = Math.ceil(node.data.aiText.length / 4)
+                }
+              } catch (e) {
+                console.warn('Failed to parse SSE message:', trimmed)
+              }
+            }
+          }
+        }
+      } else {
+        // Server-side generation for Cloud providers
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages,
+            provider: aiProvider.value,
+            baseUrl: localBaseUrl.value,
+            apiKey: apiKey.value,
+            model: modelToUse
+          })
+        })
+
+        if (!response.body) return
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          const chunk = decoder.decode(value, { stream: true })
+          node.data.aiText += chunk
+          // Estimate tokens (approx 4 chars per token)
+          node.data.tokens = Math.ceil(node.data.aiText.length / 4)
+        }
       }
     } catch (error) {
       console.error('Error generating AI response:', error)
@@ -194,6 +258,41 @@ export const useGraphStore = defineStore('graph', () => {
     }
   }
 
+  async function fetchModels() {
+    if (isFetchingModels.value) return
+    isFetchingModels.value = true
+    fetchError.value = null
+    availableModels.value = []
+
+    try {
+      let data
+      if (aiProvider.value === 'local') {
+        // Fetch directly from client for local provider
+        const baseUrl = localBaseUrl.value.replace(/\/$/, '')
+        const response = await fetch(`${baseUrl}/models`)
+        if (!response.ok) throw new Error(`Failed to fetch models: ${response.statusText}`)
+        data = await response.json()
+      } else {
+        const response = await fetch(`/api/models?baseUrl=${encodeURIComponent(localBaseUrl.value)}&apiKey=${encodeURIComponent(apiKey.value)}`)
+        if (!response.ok) throw new Error('Failed to fetch models')
+        data = await response.json()
+      }
+      
+      // Handle standard OpenAI format { data: [{ id: 'model-id', ... }] }
+      if (data.data && Array.isArray(data.data)) {
+        availableModels.value = data.data.map((m: any) => m.id)
+      } else {
+        console.warn('Unexpected model response format:', data)
+        fetchError.value = 'Unexpected response format'
+      }
+    } catch (error) {
+      console.error('Failed to fetch models:', error)
+      fetchError.value = error instanceof Error ? error.message : String(error)
+    } finally {
+      isFetchingModels.value = false
+    }
+  }
+
   return {
     nodes,
     edges,
@@ -205,12 +304,19 @@ export const useGraphStore = defineStore('graph', () => {
     systemPrompt,
     aiProvider,
     localBaseUrl,
+    apiKey,
+    modelName,
+    availableModels,
+    isFetchingModels,
+    fetchError,
     addNode,
     setActiveNode,
     forkNode,
     updateNodeUserText,
+    updateNodePreferredModel,
     generateAIResponse,
     syncGraph,
-    loadGraph
+    loadGraph,
+    fetchModels
   }
 })

@@ -6,7 +6,7 @@ import { fromHighlighter } from '@shikijs/markdown-it/core'
 import { createHighlighterCore } from 'shiki/core'
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma'
 import { useGraphStore } from '~/stores/graph'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, onClickOutside } from '@vueuse/core'
 
 const props = defineProps(['id', 'data', 'selected'])
 const store = useGraphStore()
@@ -14,6 +14,12 @@ const store = useGraphStore()
 const md = ref<MarkdownIt | null>(null)
 const renderedContent = ref('')
 const localUserText = ref(props.data.userText)
+const isSettingsOpen = ref(false)
+const settingsRef = ref(null)
+
+onClickOutside(settingsRef, () => {
+  isSettingsOpen.value = false
+})
 
 watch(() => props.data.userText, (newVal) => {
   if (newVal !== localUserText.value) {
@@ -93,6 +99,58 @@ onMounted(() => {
   >
     <Handle type="target" :position="Position.Left" class="!bg-blue-500 !w-3 !h-3 !-left-1.5" />
     
+    <!-- Metadata -->
+    <div class="bg-gray-950 px-4 py-2 text-[10px] text-gray-500 flex justify-between items-center border-b border-gray-800 relative">
+      <span class="flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full" :class="data.preferredModel ? 'bg-blue-500' : 'bg-green-500'"></span>
+        {{ data.model || 'Pending...' }}
+      </span>
+      
+      <div class="flex items-center gap-3">
+        <span class="font-mono">{{ data.tokens || 0 }} tokens</span>
+        <button 
+          @click.stop="isSettingsOpen = !isSettingsOpen" 
+          class="hover:text-white transition-colors"
+          :class="isSettingsOpen ? 'text-blue-400' : ''"
+          title="Node Settings"
+        >
+          ⚙️
+        </button>
+      </div>
+
+      <!-- Node Settings Popover -->
+      <div ref="settingsRef" v-if="isSettingsOpen" class="absolute top-full right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-3 z-50" @click.stop>
+        <div class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Node Model</div>
+        
+        <div v-if="store.aiProvider === 'local' && store.availableModels.length > 0" class="mb-2">
+          <select 
+            :value="data.preferredModel || ''"
+            @change="(e) => store.updateNodePreferredModel(id, (e.target as HTMLSelectElement).value || null)"
+            class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-blue-500"
+          >
+            <option value="">Use Global Default</option>
+            <option v-for="model in store.availableModels" :key="model" :value="model">
+              {{ model }}
+            </option>
+          </select>
+        </div>
+        <div v-else class="mb-2">
+          <input 
+            type="text" 
+            :value="data.preferredModel || ''"
+            @input="(e) => store.updateNodePreferredModel(id, (e.target as HTMLInputElement).value || null)"
+            class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-white outline-none focus:border-blue-500"
+            placeholder="Global Default"
+          >
+        </div>
+
+        <div class="text-[10px] text-gray-500">
+          <div v-if="data.preferredModel">Using: <span class="text-blue-400">{{ data.preferredModel }}</span></div>
+          <div v-else>Using Global: <span class="text-green-400">{{ store.modelName }}</span></div>
+        </div>
+      </div>
+    </div>
+
     <!-- User Header -->
     <div class="bg-gray-800 p-4 border-b border-gray-700">
       <div class="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider">User</div>
@@ -113,15 +171,6 @@ onMounted(() => {
         <span class="w-2 h-2 bg-gray-600 rounded-full animate-pulse"></span>
         Waiting for input...
       </div>
-    </div>
-
-    <!-- Metadata -->
-    <div class="bg-gray-950 px-4 py-2 text-[10px] text-gray-500 flex justify-between items-center border-t border-gray-800">
-      <span class="flex items-center gap-1">
-        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-        {{ data.model || 'GPT-4' }}
-      </span>
-      <span class="font-mono">{{ data.tokens || 0 }} tokens</span>
     </div>
 
     <Handle type="source" :position="Position.Right" class="!bg-purple-500 !w-3 !h-3 !-right-1.5" />
