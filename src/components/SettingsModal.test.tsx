@@ -96,4 +96,17 @@ describe('SettingsModal', () => {
     fireEvent.change(screen.getByLabelText('Local Base URL'), { target: { value: 'http://localhost:5555/v1' } })
     expect(store.setLocalBaseUrl).toHaveBeenCalledWith('http://localhost:5555/v1')
   })
+
+  it('renders a viewport-sized responsive dialog shell', () => {
+    render(<SettingsModal isOpen onClose={vi.fn()} />)
+
+    const dialog = screen.getByRole('dialog', { name: 'Global Settings' })
+    expect(dialog).toHaveClass('h-[85vh]')
+    expect(dialog).toHaveClass('w-[85vw]')
+    expect(dialog).toHaveClass('max-h-[85vh]')
+    expect(dialog).toHaveClass('max-w-[85vw]')
+    expect(dialog).toHaveClass('overflow-hidden')
+    expect(dialog).not.toHaveClass('sm:max-w-sm')
+    expect(dialog.querySelector('.flex-1.overflow-y-auto')).not.toBeNull()
+  })
 })
