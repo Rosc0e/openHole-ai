@@ -1,4 +1,6 @@
 
+import { createError, defineEventHandler, getQuery } from 'h3'
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const baseUrl = query.baseUrl as string || 'http://localhost:1234/v1'

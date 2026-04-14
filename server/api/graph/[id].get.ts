@@ -1,6 +1,7 @@
 import { db } from '../../db'
 import { graphs } from '../../db/schema'
 import { eq } from 'drizzle-orm'
+import { createError, defineEventHandler, getRouterParam } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')

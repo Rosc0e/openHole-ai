@@ -1,5 +1,6 @@
 import { streamText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
+import { defineEventHandler, readBody } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const { messages, provider, baseUrl, apiKey, model: modelName } = await readBody(event)
@@ -14,7 +15,7 @@ export default defineEventHandler(async (event) => {
     model = localOpenAI(modelName || 'local-model')
   } else {
     const openai = createOpenAI({
-      apiKey: apiKey || process.env.NUXT_OPENAI_API_KEY,
+      apiKey: apiKey || process.env.OPENAI_API_KEY || process.env.NUXT_OPENAI_API_KEY,
     })
     model = openai(modelName || 'gpt-4o')
   }

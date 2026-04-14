@@ -1,6 +1,8 @@
 import { db } from '../db'
 import { graphs } from '../db/schema'
 import { eq } from 'drizzle-orm'
+import { createError, defineEventHandler, readBody } from 'h3'
+
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
