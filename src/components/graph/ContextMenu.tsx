@@ -1,4 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { PlusIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface ContextMenuProps {
   x: number
@@ -39,9 +42,12 @@ export function ContextMenu({ x, y, onClose, onCreateNode }: ContextMenuProps) {
       data-testid="flow-context-menu"
       style={{ left: `${x}px`, top: `${y}px` }}
     >
-      <button className="context-menu__button" data-testid="create-node-button" onClick={onCreateNode} type="button">
-        Create New Node
-      </button>
+      <Card className="context-menu__card">
+        <Button className="context-menu__button" data-testid="create-node-button" onClick={onCreateNode} type="button" variant="ghost">
+          <PlusIcon data-icon="inline-start" />
+          Create New Node
+        </Button>
+      </Card>
     </div>
   )
 }

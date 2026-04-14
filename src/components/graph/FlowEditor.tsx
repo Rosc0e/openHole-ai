@@ -13,12 +13,17 @@ import {
   type OnConnectEnd,
   type OnConnectStart,
 } from '@xyflow/react'
+import { PlusIcon, RefreshCwIcon, SendHorizontalIcon, Settings2Icon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { SettingsModal } from '../SettingsModal'
 import { useGraphStore } from '../../store/GraphContext'
 import { createEmptyChatNode, type ChatEdge, type ChatNode } from '../../types/graph'
 import { ChatPairNode } from './ChatPairNode'
 import { ContextMenu } from './ContextMenu'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 const GRID_SIZE = 20
 const NODE_OFFSET_X = 225
@@ -176,32 +181,38 @@ export function FlowEditor() {
       <aside className="sidebar">
         <div className="sidebar__brand">RN</div>
 
-        <button className="icon-button" onClick={onCreateNewGraph} title="New Graph" type="button">
-          +
-        </button>
+        <Button className="sidebar__action" onClick={onCreateNewGraph} size="icon" title="New Graph" type="button" variant="outline">
+          <PlusIcon />
+          <span className="sr-only">New Graph</span>
+        </Button>
 
-        <button
-          className="icon-button icon-button--with-indicator"
+        <Button
+          className="sidebar__action"
           data-testid="sync-graph-button"
           onClick={() => void store.syncGraph()}
           title={store.isSyncing ? 'Syncing...' : 'Sync Now'}
+          size="icon"
           type="button"
+          variant={store.isSyncing ? 'secondary' : 'outline'}
         >
-          ☁️
-          {store.isSyncing ? <span className="status-indicator" /> : null}
-        </button>
+          <RefreshCwIcon className={cn(store.isSyncing && 'animate-spin')} />
+          <span className="sr-only">Sync graph</span>
+        </Button>
 
         <div className="sidebar__spacer" />
 
-        <button
-          className="icon-button"
+        <Button
+          className="sidebar__action"
           data-testid="open-settings-button"
           onClick={() => setIsSettingsOpen(true)}
           title="Settings"
+          size="icon"
           type="button"
+          variant="outline"
         >
-          ⚙️
-        </button>
+          <Settings2Icon />
+          <span className="sr-only">Settings</span>
+        </Button>
       </aside>
 
       <main className="canvas-area">
@@ -242,38 +253,42 @@ export function FlowEditor() {
         ) : null}
 
         <div className={`global-input ${store.activeNodeId ? '' : 'global-input--hidden'}`}>
-          <div className="global-input__inner">
-            <div className="global-input__field">
-              {store.activeNode ? (
-                <textarea
-                  className="global-input__textarea"
-                  data-testid="global-input-textarea"
-                  placeholder="Type your message here..."
-                  rows={2}
-                  value={store.activeNode.data.userText}
-                  onChange={onGlobalInput}
-                  onKeyDown={(event) => {
-                    if (event.ctrlKey && event.key === 'Enter') {
-                      event.preventDefault()
-                      onGenerate()
-                    }
-                  }}
-                />
-              ) : (
-                <div className="global-input__placeholder">Select a node to start typing...</div>
-              )}
-            </div>
+          <Card className="global-input__card">
+            <CardContent className="global-input__inner">
+              <div className="global-input__field">
+                {store.activeNode ? (
+                  <Textarea
+                    className="global-input__textarea min-h-20 resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+                    data-testid="global-input-textarea"
+                    placeholder="Type your message here..."
+                    rows={2}
+                    value={store.activeNode.data.userText}
+                    onChange={onGlobalInput}
+                    onKeyDown={(event) => {
+                      if (event.ctrlKey && event.key === 'Enter') {
+                        event.preventDefault()
+                        onGenerate()
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="global-input__placeholder">Select a node to start typing...</div>
+                )}
+              </div>
 
-            <button
-              className="primary-button primary-button--send"
-              data-testid="send-button"
-              disabled={!store.activeNodeId}
-              onClick={onGenerate}
-              type="button"
-            >
-              Send
-            </button>
-          </div>
+              <Button
+                className="primary-button--send"
+                data-testid="send-button"
+                disabled={!store.activeNodeId}
+                onClick={onGenerate}
+                type="button"
+                variant="default"
+              >
+                <SendHorizontalIcon data-icon="inline-start" />
+                Send
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
