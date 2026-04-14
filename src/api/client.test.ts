@@ -55,7 +55,7 @@ describe('api client', () => {
     )
   })
 
-  it('fetches local models directly', async () => {
+  it('fetches local models through the proxy', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ data: [{ id: 'model-a' }, { id: 'model-b' }] }), { status: 200 }),
     )
@@ -63,14 +63,16 @@ describe('api client', () => {
     await expect(
       fetchModelsRequest({ provider: 'local', baseUrl: 'http://localhost:1234/v1/', apiKey: '' }),
     ).resolves.toEqual(['model-a', 'model-b'])
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/models?baseUrl=http%3A%2F%2Flocalhost%3A1234%2Fv1%2F&apiKey=')
   })
 
-  it('throws on local model fetch failure', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500, statusText: 'Bad' }))
+  it('throws on proxied local model fetch failure', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }))
 
     await expect(
       fetchModelsRequest({ provider: 'local', baseUrl: 'http://localhost:1234/v1/', apiKey: '' }),
-    ).rejects.toThrow('Failed to fetch models: Bad')
+    ).rejects.toThrow('Failed to fetch models')
   })
 
   it('fetches cloud models through the proxy and validates payloads', async () => {
@@ -89,13 +91,9 @@ describe('api client', () => {
     ).rejects.toThrow('Failed to fetch models')
   })
 
-  it('streams local ai responses from SSE payloads', async () => {
+  it('streams local ai responses through the server proxy', async () => {
     const chunks: string[] = []
-    fetchMock.mockResolvedValueOnce(
-      new Response(createTextStream(['data: {"choices":[{"delta":{"content":"Hello"}}]}\n', 'data: [DONE]\n']), {
-        status: 200,
-      }),
-    )
+    fetchMock.mockResolvedValueOnce(new Response(createTextStream(['Hello', ' world']), { status: 200 }))
 
     await streamAIResponse({
       provider: 'local',
@@ -106,7 +104,13 @@ describe('api client', () => {
       onChunk: (chunk) => chunks.push(chunk),
     })
 
-    expect(chunks).toEqual(['Hello'])
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/chat',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    )
+    expect(chunks).toEqual(['Hello', ' world'])
   })
 
   it('streams cloud ai responses from plain text responses', async () => {
@@ -140,7 +144,7 @@ describe('api client', () => {
     ).rejects.toThrow('No response body')
   })
 
-  it('throws when local streaming responses are invalid', async () => {
+  it('throws when proxied local streaming responses are invalid', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }))
 
     await expect(
