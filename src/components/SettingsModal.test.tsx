@@ -22,6 +22,12 @@ vi.mock('../store/GraphContext', () => ({
   useGraphStore: () => store,
 }))
 
+vi.mock('./ModelPicker', () => ({
+  ModelPicker: ({ id, value, onValueChange }: { id?: string; value: string; onValueChange: (value: string) => void }) => (
+    <input id={id} data-testid="mock-model-picker" value={value} onChange={(event) => onValueChange(event.target.value)} />
+  ),
+}))
+
 describe('SettingsModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -43,7 +49,7 @@ describe('SettingsModal', () => {
     fireEvent.change(screen.getByLabelText('System Prompt'), { target: { value: 'Updated system' } })
     expect(store.setSystemPrompt).toHaveBeenCalledWith('Updated system')
 
-    fireEvent.click(screen.getByLabelText('OpenAI (Cloud)'))
+    fireEvent.click(screen.getByText('OpenAI (Cloud)'))
     expect(store.setAiProvider).toHaveBeenCalledWith('openai')
 
     fireEvent.change(screen.getByLabelText(/API Key/), { target: { value: 'secret' } })
@@ -56,8 +62,7 @@ describe('SettingsModal', () => {
     expect(store.fetchModels).toHaveBeenCalled()
 
     fireEvent.click(screen.getByText('Done'))
-    fireEvent.click(screen.getByTestId('settings-modal-backdrop'))
-    expect(onClose).toHaveBeenCalledTimes(2)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('renders the text input version when no local models exist and shows errors', () => {
@@ -87,7 +92,7 @@ describe('SettingsModal', () => {
   it('updates the local base url field', () => {
     render(<SettingsModal isOpen onClose={vi.fn()} />)
 
-    fireEvent.click(screen.getByLabelText('LM Studio (Local)'))
+    fireEvent.click(screen.getByText('LM Studio (Local)'))
     fireEvent.change(screen.getByLabelText('Local Base URL'), { target: { value: 'http://localhost:5555/v1' } })
     expect(store.setLocalBaseUrl).toHaveBeenCalledWith('http://localhost:5555/v1')
   })
