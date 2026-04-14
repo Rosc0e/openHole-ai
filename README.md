@@ -1,6 +1,6 @@
-# Nuxt Minimal Starter
+# RabbitNode
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+React + Vite power the frontend app shell, and Nitro serves the existing backend API routes.
 
 ## Setup
 
@@ -22,36 +22,21 @@ bun install
 
 ## Development Server
 
-Start the development server on `http://localhost:3000`:
+Start the Nitro API server and the Vite frontend together:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
 # bun
 bun run dev
 ```
 
-## Production
+- Vite frontend: `http://localhost:5173`
+- Nitro API server: `http://localhost:3000`
 
-Build the application for production:
+## Production Build
+
+Build the frontend and Nitro server:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
 # bun
 bun run build
 ```
@@ -59,17 +44,8 @@ bun run build
 Locally preview production build:
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
 # bun
 bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+The built Nitro server is emitted to `.output/server/index.mjs`.
