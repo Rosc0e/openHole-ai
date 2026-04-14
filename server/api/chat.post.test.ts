@@ -33,7 +33,7 @@ describe('server/api/chat.post', () => {
   })
 
   it('streams local provider responses', async () => {
-    readBody.mockResolvedValueOnce({ provider: 'local', baseUrl: 'http://localhost:1234/v1', apiKey: '', model: 'local-model', messages: [] })
+    readBody.mockResolvedValueOnce({ provider: 'local', baseUrl: 'http://localhost:1234', apiKey: '', model: 'local-model', messages: [] })
     const handler = (await import('./chat.post')).default
 
     const response = await handler({})

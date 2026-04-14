@@ -1,15 +1,24 @@
-import { streamText } from 'ai'
+import { streamText, type ModelMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { defineEventHandler, readBody } from 'h3'
+import { DEFAULT_LOCAL_OPENAI_BASE_URL, resolveOpenAICompatibleBaseUrl } from '../lib/openai-compatible'
+
+interface ChatRequestBody {
+  messages: ModelMessage[]
+  provider?: 'openai' | 'local'
+  baseUrl?: string
+  apiKey?: string
+  model?: string
+}
 
 export default defineEventHandler(async (event) => {
-  const { messages, provider, baseUrl, apiKey, model: modelName } = await readBody(event)
+  const { messages, provider, baseUrl, apiKey, model: modelName } = await readBody<ChatRequestBody>(event)
 
   let model
 
   if (provider === 'local') {
     const localOpenAI = createOpenAI({
-      baseURL: baseUrl || 'http://localhost:1234/v1',
+      baseURL: resolveOpenAICompatibleBaseUrl(baseUrl) || DEFAULT_LOCAL_OPENAI_BASE_URL,
       apiKey: apiKey || 'not-needed',
     })
     model = localOpenAI(modelName || 'local-model')

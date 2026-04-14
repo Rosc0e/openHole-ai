@@ -1,18 +1,14 @@
-
 import { createError, defineEventHandler, getQuery } from 'h3'
+import { createOpenAICompatibleHeaders, resolveOpenAICompatibleModelsUrl } from '../lib/openai-compatible'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const baseUrl = query.baseUrl as string || 'http://localhost:1234/v1'
-  const apiKey = query.apiKey as string || 'not-needed'
+  const baseUrl = query.baseUrl as string | undefined
+  const apiKey = query.apiKey as string | undefined
 
   try {
-    // Ensure baseUrl doesn't end with a slash for consistent appending
-    const cleanBaseUrl = baseUrl.replace(/\/$/, '')
-    const response = await fetch(`${cleanBaseUrl}/models`, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
+    const response = await fetch(resolveOpenAICompatibleModelsUrl(baseUrl), {
+      headers: createOpenAICompatibleHeaders(apiKey),
     })
 
     if (!response.ok) {

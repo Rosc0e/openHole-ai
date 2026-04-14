@@ -64,7 +64,9 @@ describe('api client', () => {
       fetchModelsRequest({ provider: 'local', baseUrl: 'http://localhost:1234/v1/', apiKey: '' }),
     ).resolves.toEqual(['model-a', 'model-b'])
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/models?baseUrl=http%3A%2F%2Flocalhost%3A1234%2Fv1%2F&apiKey=')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/models?provider=local&baseUrl=http%3A%2F%2Flocalhost%3A1234%2Fv1%2F&apiKey=',
+    )
   })
 
   it('throws on proxied local model fetch failure', async () => {

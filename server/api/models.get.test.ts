@@ -21,7 +21,7 @@ describe('server/api/models.get', () => {
   })
 
   it('proxies model lists', async () => {
-    getQuery.mockReturnValue({ baseUrl: 'http://localhost:1234/v1/', apiKey: 'secret' })
+    getQuery.mockReturnValue({ provider: 'local', baseUrl: 'http://localhost:1234', apiKey: 'secret' })
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: 'a' }] }), { status: 200 }))
     const handler = (await import('./models.get')).default
 

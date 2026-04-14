@@ -42,7 +42,7 @@ export async function syncGraphRequest(payload: {
 
 export async function fetchModelsRequest({ provider, baseUrl, apiKey }: ModelRequest) {
   const response = await fetch(
-    `/api/models?baseUrl=${encodeURIComponent(baseUrl)}&apiKey=${encodeURIComponent(apiKey)}`,
+    `/api/models?provider=${encodeURIComponent(provider)}&baseUrl=${encodeURIComponent(baseUrl)}&apiKey=${encodeURIComponent(apiKey)}`,
   )
 
   if (!response.ok) {
