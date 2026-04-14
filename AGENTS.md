@@ -28,5 +28,8 @@ in your gh_grep querys include the keyword vue
 when the user asks for a change thats a good time to commit the previous ones 
 ## misc
 - use podman instead of docker
+- run `bun run knip` before commits to catch unused code and dependencies
+- keep Knip config broad in this repo (`src/**/*`, `server/**/*`, `test/**/*`, `tests/**/*`); explicit entry globs were noisy and missed CSS-side usage
+- Playwright's webServer check should match the actual bound loopback host here (`localhost`/`::1` vs `127.0.0.1`)
 
 - Keep code simple and maintainable
