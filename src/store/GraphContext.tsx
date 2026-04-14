@@ -205,8 +205,8 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const buildContext = useCallback(
-    (nodeId: string): ChatMessage[] => {
-      return buildContextMessages(nodes, edges, nodeId, systemPrompt)
+    (nodeId: string, options?: { includeCurrentAssistant?: boolean }): ChatMessage[] => {
+      return buildContextMessages(nodes, edges, nodeId, systemPrompt, options)
     },
     [edges, nodes, systemPrompt],
   )
@@ -218,8 +218,10 @@ export function GraphProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const messages = buildContext(nodeId)
-      const modelToUse = node.data.preferredModel || modelName
+      const messages = buildContext(nodeId, { includeCurrentAssistant: false })
+      const modelToUse = (node.data.preferredModel || modelName).trim()
+      const fallbackModel = aiProvider === 'local' ? 'local-model' : 'gpt-4o'
+      const resolvedModel = modelToUse || fallbackModel
 
       setNodes((currentNodes) =>
         currentNodes.map((entry) =>
@@ -230,7 +232,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
                   ...entry.data,
                   aiText: '',
                   tokens: 0,
-                  model: modelToUse,
+                  model: resolvedModel,
                 },
               }
             : entry,
@@ -243,7 +245,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           baseUrl: localBaseUrl,
           apiKey,
           messages,
-          model: modelToUse || (aiProvider === 'local' ? 'local-model' : 'gpt-4o'),
+          model: resolvedModel,
           onChunk: (chunk) => {
             setNodes((currentNodes) =>
               currentNodes.map((entry) => {
@@ -333,7 +335,6 @@ export function GraphProvider({ children }: { children: ReactNode }) {
 
     setIsFetchingModels(true)
     setFetchError(null)
-    setAvailableModels([])
 
     try {
       const models = await fetchModelsRequest({

@@ -1,9 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Settings2Icon } from 'lucide-react'
+import { ModelPicker } from '../ModelPicker'
 import { useGraphStore } from '../../store/GraphContext'
 import type { ChatNode } from '../../types/graph'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 const markdown = new MarkdownIt({
   html: true,
@@ -15,7 +29,6 @@ export function ChatPairNode({ id, data, selected }: NodeProps<ChatNode>) {
   const store = useGraphStore()
   const [localUserText, setLocalUserText] = useState(data.userText)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const settingsRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setLocalUserText(data.userText)
@@ -35,24 +48,6 @@ export function ChatPairNode({ id, data, selected }: NodeProps<ChatNode>) {
     }
   }, [data.userText, id, localUserText, store])
 
-  useEffect(() => {
-    if (!isSettingsOpen) {
-      return
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as globalThis.Node)) {
-        setIsSettingsOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown)
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-    }
-  }, [isSettingsOpen])
-
   const renderedContent = useMemo(() => {
     if (!data.aiText) {
       return ''
@@ -66,72 +61,80 @@ export function ChatPairNode({ id, data, selected }: NodeProps<ChatNode>) {
       <Handle className="chat-node__handle chat-node__handle--target" position={Position.Left} type="target" />
 
       <div className="chat-node__meta">
-        <span className="chat-node__status">
-          <span
-            className={`chat-node__status-dot ${data.preferredModel ? 'chat-node__status-dot--accent' : ''}`}
-          />
-          {data.model || 'Pending...'}
-        </span>
-
-        <div className="chat-node__meta-actions">
-          <span className="chat-node__tokens">{data.tokens || 0} tokens</span>
-          <button
-            className={`icon-button icon-button--ghost ${isSettingsOpen ? 'icon-button--active' : ''}`}
-            onClick={(event) => {
-              event.stopPropagation()
-              setIsSettingsOpen((current) => !current)
-            }}
-            title="Node Settings"
-            type="button"
-          >
-            ⚙️
-          </button>
+        <div className="chat-node__status-wrap">
+          <span className="chat-node__status">
+            <span
+              className={`chat-node__status-dot ${data.preferredModel ? 'chat-node__status-dot--accent' : ''}`}
+            />
+            {data.model || 'Pending...'}
+          </span>
+          <Badge className="chat-node__badge" variant="outline">
+            {data.preferredModel ? 'Node model' : 'Global model'}
+          </Badge>
         </div>
 
-        {isSettingsOpen ? (
-          <div ref={settingsRef} className="node-settings" onClick={(event) => event.stopPropagation()}>
-            <div className="node-settings__title">Node Model</div>
-
-            {store.aiProvider === 'local' && store.availableModels.length > 0 ? (
-              <select
-                className="field-input field-input--compact"
-                value={data.preferredModel || ''}
-                onChange={(event) =>
-                  store.updateNodePreferredModel(id, event.target.value || null)
-                }
+        <div className="chat-node__meta-actions">
+          <Badge className="chat-node__tokens" variant="outline">
+            {data.tokens || 0} tokens
+          </Badge>
+          <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                aria-pressed={isSettingsOpen}
+                className="chat-node__settings-trigger"
+                size="icon-sm"
+                title="Node Settings"
+                type="button"
+                variant="ghost"
+                onClick={(event) => event.stopPropagation()}
               >
-                <option value="">Use Global Default</option>
-                {store.availableModels.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                className="field-input field-input--compact"
-                type="text"
-                placeholder="Global Default"
-                value={data.preferredModel || ''}
-                onChange={(event) =>
-                  store.updateNodePreferredModel(id, event.target.value || null)
-                }
-              />
-            )}
+                <Settings2Icon />
+                <span className="sr-only">Node Settings</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80" onClick={(event) => event.stopPropagation()}>
+              <PopoverHeader>
+                <PopoverTitle>Node Model</PopoverTitle>
+                <PopoverDescription>
+                  Override the global model for this node without affecting the rest of the graph.
+                </PopoverDescription>
+              </PopoverHeader>
 
-            <div className="node-settings__hint">
-              {data.preferredModel ? (
-                <div>
-                  Using: <span className="node-settings__value">{data.preferredModel}</span>
-                </div>
-              ) : (
-                <div>
-                  Using Global: <span className="node-settings__value">{store.modelName || 'Default'}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : null}
+              <FieldGroup>
+                <Field>
+                  <FieldContent>
+                    <FieldLabel htmlFor={`node-model-${id}`}>Node Model</FieldLabel>
+                    <FieldDescription>
+                      {data.preferredModel
+                        ? `Using ${data.preferredModel}`
+                        : `Using global default ${store.modelName || 'Default'}`}
+                    </FieldDescription>
+                  </FieldContent>
+
+                  {store.aiProvider === 'local' && store.availableModels.length > 0 ? (
+                    <ModelPicker
+                      id={`node-model-${id}`}
+                      emptyMessage="No matching node models."
+                      emptyOptionLabel="Use global default"
+                      includeEmptyOption
+                      models={store.availableModels}
+                      placeholder="Search node models…"
+                      value={data.preferredModel || ''}
+                      onValueChange={(value) => store.updateNodePreferredModel(id, value || null)}
+                    />
+                  ) : (
+                    <Input
+                      id={`node-model-${id}`}
+                      placeholder="Global Default"
+                      value={data.preferredModel || ''}
+                      onChange={(event) => store.updateNodePreferredModel(id, event.target.value || null)}
+                    />
+                  )}
+                </Field>
+              </FieldGroup>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <div className="chat-node__section chat-node__section--user">

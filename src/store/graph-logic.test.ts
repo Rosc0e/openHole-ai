@@ -32,6 +32,19 @@ describe('graph logic', () => {
     ])
   })
 
+  it('can exclude the current node assistant reply when regenerating', () => {
+    expect(
+      buildContextMessages([root, child], edges, 'child', 'System', {
+        includeCurrentAssistant: false,
+      }),
+    ).toEqual([
+      { role: 'system', content: 'System' },
+      { role: 'user', content: 'Hello world' },
+      { role: 'assistant', content: 'Hi there! How can I help you today?' },
+      { role: 'user', content: 'Second question' },
+    ])
+  })
+
   it('omits empty message fields and empty system prompts', () => {
     expect(
       buildContextMessages(

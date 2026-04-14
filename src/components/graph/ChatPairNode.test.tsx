@@ -14,6 +14,12 @@ vi.mock('../../store/GraphContext', () => ({
   useGraphStore: () => store,
 }))
 
+vi.mock('../ModelPicker', () => ({
+  ModelPicker: ({ id, value, onValueChange }: { id?: string; value: string; onValueChange: (value: string) => void }) => (
+    <input id={id} data-testid="mock-node-model-picker" value={value} onChange={(event) => onValueChange(event.target.value)} />
+  ),
+}))
+
 vi.mock('@xyflow/react', () => ({
   Handle: (props: Record<string, unknown>) => <div data-testid="handle" {...props} />,
   Position: { Left: 'left', Right: 'right' },
@@ -68,20 +74,17 @@ describe('ChatPairNode', () => {
     expect(store.updateNodeUserText).toHaveBeenCalledWith('node-1', 'Updated text')
   })
 
-  it('supports node-level model settings and outside click closing', () => {
+  it('supports node-level model settings and closing the popover', () => {
     renderNode({ aiText: '', preferredModel: 'model-a' })
 
     fireEvent.click(screen.getByTitle('Node Settings'))
-    expect(screen.getByText('Using:')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('Node Model'))
-    expect(screen.getByText('Node Model')).toBeInTheDocument()
+    expect(screen.getAllByText('Node Model')).toHaveLength(2)
 
     fireEvent.change(screen.getByDisplayValue('model-a'), { target: { value: '' } })
     expect(store.updateNodePreferredModel).toHaveBeenCalledWith('node-1', null)
 
-    fireEvent.mouseDown(document.body)
-    expect(screen.queryByText('Node Model')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTitle('Node Settings'))
+    expect(screen.queryAllByText('Node Model')).toHaveLength(0)
   })
 
   it('renders the empty assistant state and text input fallback', () => {

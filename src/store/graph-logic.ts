@@ -19,12 +19,18 @@ export function buildContextMessages(
   edges: ChatEdge[],
   nodeId: string,
   systemPrompt: string,
+  options?: {
+    includeCurrentAssistant?: boolean
+  },
 ): ChatMessage[] {
   const messages: ChatMessage[] = []
   let currentNode = nodes.find((node) => node.id === nodeId)
+  let isTargetNode = true
 
   while (currentNode) {
-    if (currentNode.data.aiText) {
+    const shouldIncludeAssistant = !isTargetNode || options?.includeCurrentAssistant !== false
+
+    if (shouldIncludeAssistant && currentNode.data.aiText) {
       messages.unshift({ role: 'assistant', content: currentNode.data.aiText })
     }
 
@@ -33,6 +39,7 @@ export function buildContextMessages(
     }
 
     currentNode = getParentNode(nodes, edges, currentNode.id)
+    isTargetNode = false
   }
 
   if (systemPrompt) {
