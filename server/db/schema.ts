@@ -1,8 +1,8 @@
-import { pgTable, uuid, text, jsonb, timestamp } from 'drizzle-orm/pg-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-export const graphs = pgTable('graphs', {
-  id: uuid('id').primaryKey().defaultRandom(),
+export const graphs = sqliteTable('graphs', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   title: text('title'),
-  content: jsonb('content'), // Stores { nodes: [], edges: [] }
-  updatedAt: timestamp('updated_at').defaultNow()
+  content: text('content', { mode: 'json' }), // Stores { nodes: [], edges: [] }
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).defaultNow()
 })

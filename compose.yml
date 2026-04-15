@@ -4,21 +4,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/rabbitnode
+      - DATABASE_URL=file:/app/.data/rabbitnode.sqlite
       - NUXT_OPENAI_API_KEY=${OPENAI_KEY}
-    depends_on:
-      - db
-
-  db:
-    image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=rabbitnode
+      - rabbit_app_data:/app/.data
 
 volumes:
-  pg_data:
+  rabbit_app_data:

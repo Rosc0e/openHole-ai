@@ -17,10 +17,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.52",
     "@fontsource-variable/geist": "^5.2.8",
     "@xyflow/react": "^12.10.2",
-    "ai": "^6.0.159",
+    "better-sqlite3": "^12.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -29,7 +28,6 @@
     "h3": "1.15.11",
     "lucide-react": "^1.8.0",
     "markdown-it": "^14.1.1",
-    "postgres": "^3.4.9",
     "radix-ui": "^1.4.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -41,6 +39,7 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/better-sqlite3": "^7.6.12",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/markdown-it": "^14.1.2",

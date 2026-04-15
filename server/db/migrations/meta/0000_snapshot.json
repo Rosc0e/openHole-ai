@@ -2,18 +2,17 @@
   "id": "29e08a1d-52cd-49a8-b9e8-f9b74a9e4c24",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "tables": {
-    "public.graphs": {
+    "graphs": {
       "name": "graphs",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "title": {
           "name": "title",
@@ -23,16 +22,16 @@
         },
         "content": {
           "name": "content",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "default": "now()"
+          "default": "(cast((julianday('now') - 2440587.5)*86400000 as integer))"
         }
       },
       "indexes": {},

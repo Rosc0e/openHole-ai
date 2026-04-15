@@ -21,7 +21,7 @@
 
 ### Data & State
 *   **Local State:** Pinia (persisted via `@vueuse/core` `useStorage`)
-*   **Remote Storage:** PostgreSQL 16
+*   **Remote Storage:** SQLite
 *   **ORM:** Drizzle ORM (`drizzle-orm`, `drizzle-kit`)
 *   **AI SDK:** Vercel AI SDK (`ai` core package)
 
@@ -36,16 +36,16 @@ We prioritize local speed (instant load) with server-side backup.
     *   The entire graph state lives in `localStorage` (IndexedDB wrapper).
     *   Pinia store `graphStore` hydrates from here on boot.
 2.  **Cloud Layer (Backup/Sync):**
-    *   **PostgreSQL** acts as a "Save Slot".
+    *   **SQLite** acts as a "Save Slot".
     *   **Sync Trigger:** Manual "Sync" button or Auto-save on idle (debounce 5s).
     *   **Endpoint:** `POST /api/sync` accepts a raw JSON dump of the graph.
     *   **Schema (Drizzle):**
         ```typescript
-        export const graphs = pgTable('graphs', {
-          id: uuid('id').primaryKey().defaultRandom(),
+        export const graphs = sqliteTable('graphs', {
+          id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
           title: text('title'),
-          content: jsonb('content'), // Stores { nodes: [], edges: [] }
-          updatedAt: timestamp('updated_at').defaultNow()
+          content: text('content', { mode: 'json' }),
+          updatedAt: integer('updated_at', { mode: 'timestamp' }).defaultNow()
         });
         ```
 
@@ -105,19 +105,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/rabbitnode
+      - DATABASE_URL=file:/app/.data/rabbitnode.sqlite
       - NUXT_OPENAI_API_KEY=${OPENAI_KEY}
-    depends_on:
-      - db
-
-  db:
-    image: postgres:16-alpine
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=rabbitnode
+      - rabbit_app_data:/app/.data
 ```
 
 ### Developer Experience (DX) Standards
@@ -135,7 +126,7 @@ services:
 ## 6. Implementation Checklist (Phase 1)
 
 1.  [x] **Init:** `bun create nuxt` + Install Vue Flow, Nuxt UI, Pinia, Drizzle.
-2.  [x] **Database:** Setup Postgres container and run Drizzle migration.
+2.  [x] **Database:** Setup SQLite storage and run Drizzle migration.
 3.  [x] **Canvas:** Render `<VueFlow>` with `ChatPair` component (Visuals only).
 4.  [x] **Store:** Build `useGraphStore` to handle `addNode` and `forkNode` logic.
 5.  [x] **AI Backend:** Setup `/api/chat` with Vercel AI SDK + LM Studio connection.
@@ -155,7 +146,7 @@ services:
 - [x] **Context Injection:** Update `buildContext` in `stores/graph.ts` to prepend the global `systemPrompt` to the messages array before sending to the API.
 
 ### Phase 4. Data Persistence (Cloud Layer)
-- [x] **Sync API Route:** Implement `server/api/sync.post.ts` to receive the full graph JSON and upsert it into the PostgreSQL `graphs` table.
+- [x] **Sync API Route:** Implement `server/api/sync.post.ts` to receive the full graph JSON and upsert it into the `graphs` table.
 - [x] **Load API Route:** Implement `server/api/graph/[id].get.ts` to retrieve a specific graph structure by ID.
 - [x] **Auto-Save Logic:** Implement a `watch` effect in `RabbitFlow.vue` or the store that triggers the Sync API on change (with a 5-second debounce).
 - [x] **Manual Sync:** Add a "Save/Sync" button in the UI for immediate persistence.

@@ -1,6 +1,6 @@
 CREATE TABLE "graphs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"title" text,
-	"content" jsonb,
-	"updated_at" timestamp DEFAULT now()
+	"content" text,
+	"updated_at" integer DEFAULT (cast((julianday('now') - 2440587.5)*86400000 as integer))
 );
