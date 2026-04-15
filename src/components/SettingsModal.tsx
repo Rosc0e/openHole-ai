@@ -1,6 +1,6 @@
 import { ModelPicker } from './ModelPicker'
 import { useGraphStore } from '../store/GraphContext'
-import type { AIProvider } from '../types/graph'
+import { AI_PROVIDER_OPTIONS, getDefaultModelForProvider, type AIProvider } from '../types/graph'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,6 +36,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   if (!isOpen) {
     return null
   }
+
+  const apiKeyLabel = store.aiProvider === 'lmstudio' ? 'API Key (Optional)' : 'API Key'
+  const modelPlaceholder = store.aiProvider === 'anthropic'
+    ? getDefaultModelForProvider('anthropic')
+    : 'gpt-4o or local-model'
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => (!open ? onClose() : undefined)}>
@@ -75,32 +80,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <FieldSet>
                     <FieldLegend variant="label">AI Provider</FieldLegend>
                     <FieldDescription>
-                      OpenAI stays cloud-hosted. LM Studio is proxied through the server so local models work in-browser.
+                      Pick the provider the server should use for model lookups and generation requests.
                     </FieldDescription>
                     <RadioGroup
                       className="gap-3"
                       value={store.aiProvider}
                       onValueChange={(value) => store.setAiProvider(value as AIProvider)}
                     >
-                      <FieldLabel htmlFor="provider-openai">
-                        <Field orientation="horizontal" className="rounded-lg border border-border bg-background px-3 py-3">
-                          <FieldContent>
-                            <span className="text-sm font-medium text-foreground">OpenAI (Cloud)</span>
-                            <FieldDescription>Use your OpenAI-compatible cloud key from the server route.</FieldDescription>
-                          </FieldContent>
-                          <RadioGroupItem id="provider-openai" value="openai" />
-                        </Field>
-                      </FieldLabel>
-
-                      <FieldLabel htmlFor="provider-local">
-                        <Field orientation="horizontal" className="rounded-lg border border-border bg-background px-3 py-3">
-                          <FieldContent>
-                            <span className="text-sm font-medium text-foreground">LM Studio (Local)</span>
-                            <FieldDescription>Fetches `/v1/models` and sends generation requests through the Nitro server.</FieldDescription>
-                          </FieldContent>
-                          <RadioGroupItem id="provider-local" value="local" />
-                        </Field>
-                      </FieldLabel>
+                      {AI_PROVIDER_OPTIONS.map((provider) => (
+                        <FieldLabel key={provider.value} htmlFor={`provider-${provider.value}`}>
+                          <Field orientation="horizontal" className="rounded-lg border border-border bg-background px-3 py-3">
+                            <FieldContent>
+                              <span className="text-sm font-medium text-foreground">{provider.label}</span>
+                              <FieldDescription>{describeProvider(provider.value)}</FieldDescription>
+                            </FieldContent>
+                            <RadioGroupItem id={`provider-${provider.value}`} value={provider.value} />
+                          </Field>
+                        </FieldLabel>
+                      ))}
                     </RadioGroup>
                   </FieldSet>
                 </FieldGroup>
@@ -116,23 +113,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </CardHeader>
               <CardContent className="flex flex-col gap-5">
                 <FieldGroup>
-                  {store.aiProvider === 'local' ? (
-                    <Field>
-                      <FieldLabel htmlFor="localBaseUrl">Local Base URL</FieldLabel>
-                      <Input
-                        id="localBaseUrl"
-                        placeholder="http://localhost:1234/v1"
-                        value={store.localBaseUrl}
-                        onChange={(event) => store.setLocalBaseUrl(event.target.value)}
-                      />
-                      <FieldDescription>
-                        If you enter the LM Studio host without `/v1`, the server will normalize it automatically.
-                      </FieldDescription>
-                    </Field>
-                  ) : null}
-
                   <Field>
-                    <FieldLabel htmlFor="apiKey">API Key {store.aiProvider === 'local' ? '(Optional)' : ''}</FieldLabel>
+                    <FieldLabel htmlFor="apiKey">{apiKeyLabel}</FieldLabel>
                     <Input
                       id="apiKey"
                       placeholder="sk-..."
@@ -147,24 +129,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       <FieldContent>
                         <FieldLabel htmlFor="modelName">Model Name</FieldLabel>
                         <FieldDescription>
-                          {store.aiProvider === 'local'
-                            ? 'Choose from LM Studio model ids or type a fallback when the list is unavailable.'
+                          {store.availableModels.length > 0
+                            ? 'Choose from the provider model ids or type a fallback when the list is unavailable.'
                             : 'Set the model name that should be used for new generations.'}
                         </FieldDescription>
                       </FieldContent>
 
-                      {store.aiProvider === 'local' ? (
-                        <Button
-                          data-testid="refresh-models-button"
-                          disabled={store.isFetchingModels}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                          onClick={() => void store.fetchModels()}
-                        >
-                          {store.isFetchingModels ? 'Loading models…' : 'Refresh Models'}
-                        </Button>
-                      ) : null}
+                      <Button
+                        data-testid="refresh-models-button"
+                        disabled={store.isFetchingModels}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                        onClick={() => void store.fetchModels()}
+                      >
+                        {store.isFetchingModels ? 'Loading models…' : 'Refresh Models'}
+                      </Button>
                     </div>
 
                     {store.fetchError ? (
@@ -175,19 +155,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ) : null}
 
                     <div className="mt-3">
-                      {store.aiProvider === 'local' && store.availableModels.length > 0 ? (
+                      {store.availableModels.length > 0 ? (
                         <ModelPicker
                           id="modelName"
-                          emptyMessage="No matching LM Studio models."
+                          emptyMessage="No matching provider models."
                           models={store.availableModels}
-                          placeholder="Search local models…"
+                          placeholder="Search provider models…"
                           value={store.modelName}
                           onValueChange={store.setModelName}
                         />
                       ) : (
                         <Input
                           id="modelName"
-                          placeholder="gpt-4o or local-model"
+                          placeholder={modelPlaceholder}
                           value={store.modelName}
                           onChange={(event) => store.setModelName(event.target.value)}
                         />
@@ -208,4 +188,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </DialogContent>
     </Dialog>
   )
+}
+
+function describeProvider(provider: AIProvider) {
+  if (provider === 'openrouter') {
+    return 'OpenAI-compatible routing with OpenRouter defaults and optional attribution headers.'
+  }
+
+  if (provider === 'anthropic') {
+    return 'Uses Anthropic-compatible requests for model lookups and message generation.'
+  }
+
+  if (provider === 'lmstudio') {
+    return 'Fetches local `/v1/models` data and proxies local generation through the server.'
+  }
+
+  return 'Uses OpenAI-compatible requests with the hosted OpenAI defaults.'
 }

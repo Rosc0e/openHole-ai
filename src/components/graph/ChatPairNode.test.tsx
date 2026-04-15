@@ -3,7 +3,7 @@ import { ChatPairNode } from './ChatPairNode'
 import type { ChatNode } from '../../types/graph'
 
 const store = {
-  aiProvider: 'local' as const,
+  aiProvider: 'lmstudio' as const,
   availableModels: ['model-a'],
   modelName: 'global-model',
   updateNodeUserText: vi.fn(),

@@ -111,7 +111,7 @@ export function ChatPairNode({ id, data, selected }: NodeProps<ChatNode>) {
                     </FieldDescription>
                   </FieldContent>
 
-                  {store.aiProvider === 'local' && store.availableModels.length > 0 ? (
+                  {store.availableModels.length > 0 ? (
                     <ModelPicker
                       id={`node-model-${id}`}
                       emptyMessage="No matching node models."

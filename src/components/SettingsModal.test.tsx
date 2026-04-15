@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { SettingsModal } from './SettingsModal'
+import type { AIProvider } from '../types/graph'
 
 const store = {
   systemPrompt: 'System',
-  aiProvider: 'local' as const,
+  aiProvider: 'lmstudio' as AIProvider,
   localBaseUrl: 'http://localhost:1234/v1',
   apiKey: '',
   modelName: 'local-model',
@@ -31,7 +32,7 @@ vi.mock('./ModelPicker', () => ({
 describe('SettingsModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    store.aiProvider = 'local'
+    store.aiProvider = 'lmstudio'
     store.availableModels = ['local-model', 'second-model']
     store.fetchError = null
     store.isFetchingModels = false
@@ -49,7 +50,7 @@ describe('SettingsModal', () => {
     fireEvent.change(screen.getByLabelText('System Prompt'), { target: { value: 'Updated system' } })
     expect(store.setSystemPrompt).toHaveBeenCalledWith('Updated system')
 
-    fireEvent.click(screen.getByText('OpenAI (Cloud)'))
+    fireEvent.click(screen.getByText('OpenAI'))
     expect(store.setAiProvider).toHaveBeenCalledWith('openai')
 
     fireEvent.change(screen.getByLabelText(/API Key/), { target: { value: 'secret' } })
@@ -65,7 +66,7 @@ describe('SettingsModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('renders the text input version when no local models exist and shows errors', () => {
+  it('renders the text input version when no provider models exist and shows errors', () => {
     store.availableModels = []
     store.fetchError = 'Failed to fetch'
 
@@ -75,26 +76,28 @@ describe('SettingsModal', () => {
     expect(screen.getByPlaceholderText('gpt-4o or local-model')).toBeInTheDocument()
   })
 
-  it('hides local-only controls for cloud mode and updates the fallback model input', () => {
-    store.aiProvider = 'openai'
+  it('keeps provider connection focused on API key and model input for OpenRouter', () => {
+    store.aiProvider = 'openrouter'
     store.availableModels = []
 
     render(<SettingsModal isOpen onClose={vi.fn()} />)
 
-    expect(screen.queryByLabelText('Local Base URL')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('refresh-models-button')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Provider Base URL')).not.toBeInTheDocument()
+    expect(screen.getByTestId('refresh-models-button')).toBeInTheDocument()
     expect(screen.getByLabelText('API Key')).toBeInTheDocument()
 
     fireEvent.change(screen.getByPlaceholderText('gpt-4o or local-model'), { target: { value: 'gpt-5' } })
     expect(store.setModelName).toHaveBeenCalledWith('gpt-5')
   })
 
-  it('updates the local base url field', () => {
+  it('renders all four providers without exposing a provider base url field', () => {
     render(<SettingsModal isOpen onClose={vi.fn()} />)
 
-    fireEvent.click(screen.getByText('LM Studio (Local)'))
-    fireEvent.change(screen.getByLabelText('Local Base URL'), { target: { value: 'http://localhost:5555/v1' } })
-    expect(store.setLocalBaseUrl).toHaveBeenCalledWith('http://localhost:5555/v1')
+    expect(screen.getByText('OpenAI')).toBeInTheDocument()
+    expect(screen.getByText('OpenRouter')).toBeInTheDocument()
+    expect(screen.getByText('Anthropic')).toBeInTheDocument()
+    expect(screen.getByText('LM Studio')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Provider Base URL')).not.toBeInTheDocument()
   })
 
   it('renders a viewport-sized responsive dialog shell', () => {
