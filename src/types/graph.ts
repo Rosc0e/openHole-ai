@@ -1,7 +1,35 @@
 import type { Edge, Node, XYPosition } from '@xyflow/react'
 
-export type AIProvider = 'openai' | 'local'
+export type AIProvider = 'openai' | 'openrouter' | 'anthropic' | 'lmstudio'
+
+export const AI_PROVIDER_OPTIONS: Array<{ value: AIProvider; label: string }> = [
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'anthropic', label: 'Anthropic' },
+  { value: 'lmstudio', label: 'LM Studio' },
+]
+
+export function getDefaultModelForProvider(provider: AIProvider) {
+  if (provider === 'anthropic') {
+    return 'claude-3-5-haiku-latest'
+  }
+
+  if (provider === 'lmstudio') {
+    return 'local-model'
+  }
+
+  return 'gpt-4o'
+}
+
+export function getDefaultBaseUrlForProvider(provider: AIProvider) {
+  if (provider === 'lmstudio') {
+    return 'http://localhost:1234/v1'
+  }
+
+  return ''
+}
 export type MessageRole = 'system' | 'user' | 'assistant'
+export type GenerationStatus = 'idle' | 'running' | 'complete' | 'error'
 
 export interface ChatMessage {
   role: MessageRole
@@ -15,6 +43,9 @@ export interface ChatPairData {
   model?: string
   tokens?: number
   preferredModel?: string | null
+  generationStatus?: GenerationStatus
+  generationError?: string | null
+  generationRunId?: string | null
 }
 
 export type ChatNode = Node<ChatPairData, 'chatPair'>
@@ -29,6 +60,18 @@ export interface StoredGraph {
   id: string
   title: string | null
   content: GraphContent | null
+  updatedAt?: string | Date | null
+}
+
+export interface SessionListItem {
+  id: string
+  title: string | null
+  updatedAt: string
+}
+
+export interface SessionListResponse {
+  items: SessionListItem[]
+  nextCursor: string | null
 }
 
 export function createInitialNode(

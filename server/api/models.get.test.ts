@@ -21,13 +21,27 @@ describe('server/api/models.get', () => {
   })
 
   it('proxies model lists', async () => {
-    getQuery.mockReturnValue({ provider: 'local', baseUrl: 'http://localhost:1234', apiKey: 'secret' })
+    getQuery.mockReturnValue({ provider: 'openrouter', baseUrl: '', apiKey: 'secret' })
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: 'a' }] }), { status: 200 }))
     const handler = (await import('./models.get')).default
 
     await expect(handler({})).resolves.toEqual({ data: [{ id: 'a' }] })
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:1234/v1/models', {
+    expect(fetchMock).toHaveBeenCalledWith('https://openrouter.ai/api/v1/models', {
       headers: { Authorization: 'Bearer secret' },
+    })
+  })
+
+  it('uses anthropic-compatible headers for anthropic model lists', async () => {
+    getQuery.mockReturnValue({ provider: 'anthropic', baseUrl: '', apiKey: 'anthropic-key' })
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: 'claude' }] }), { status: 200 }))
+    const handler = (await import('./models.get')).default
+
+    await expect(handler({})).resolves.toEqual({ data: [{ id: 'claude' }] })
+    expect(fetchMock).toHaveBeenCalledWith('https://api.anthropic.com/v1/models', {
+      headers: {
+        'anthropic-version': '2023-06-01',
+        'x-api-key': 'anthropic-key',
+      },
     })
   })
 

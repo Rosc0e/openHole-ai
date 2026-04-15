@@ -1,11 +1,11 @@
-import { streamText, type ModelMessage } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
 import { defineEventHandler, readBody } from 'h3'
-import { DEFAULT_LOCAL_OPENAI_BASE_URL, resolveOpenAICompatibleBaseUrl } from '../lib/openai-compatible'
+import type { AIProvider, ChatMessage } from '../../src/types/graph'
+import { getDefaultModelForProvider } from '../../src/types/graph'
+import { getProvider } from '../lib/providers/registry'
 
 interface ChatRequestBody {
-  messages: ModelMessage[]
-  provider?: 'openai' | 'local'
+  messages?: ChatMessage[]
+  provider?: AIProvider
   baseUrl?: string
   apiKey?: string
   model?: string
@@ -13,26 +13,12 @@ interface ChatRequestBody {
 
 export default defineEventHandler(async (event) => {
   const { messages, provider, baseUrl, apiKey, model: modelName } = await readBody<ChatRequestBody>(event)
+  const resolvedProvider = provider ?? 'openai'
 
-  let model
-
-  if (provider === 'local') {
-    const localOpenAI = createOpenAI({
-      baseURL: resolveOpenAICompatibleBaseUrl(baseUrl) || DEFAULT_LOCAL_OPENAI_BASE_URL,
-      apiKey: apiKey || 'not-needed',
-    })
-    model = localOpenAI(modelName || 'local-model')
-  } else {
-    const openai = createOpenAI({
-      apiKey: apiKey || process.env.OPENAI_API_KEY || process.env.NUXT_OPENAI_API_KEY,
-    })
-    model = openai(modelName || 'gpt-4o')
-  }
-
-  const result = streamText({
-    model,
-    messages,
+  return getProvider(resolvedProvider).streamText({
+    baseUrl,
+    apiKey,
+    messages: messages ?? [],
+    model: modelName?.trim() || getDefaultModelForProvider(resolvedProvider),
   })
-
-  return result.toTextStreamResponse()
 })
