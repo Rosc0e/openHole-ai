@@ -31,5 +31,6 @@ when the user asks for a change thats a good time to commit the previous ones
 - run `bun run knip` before commits to catch unused code and dependencies
 - keep Knip config broad in this repo (`src/**/*`, `server/**/*`, `test/**/*`, `tests/**/*`); explicit entry globs were noisy and missed CSS-side usage
 - Playwright's webServer check should match the actual bound loopback host here (`localhost`/`::1` vs `127.0.0.1`)
+- for UI changes, capture Playwright screenshots of the affected states/features and review them before considering the work complete
 
 - Keep code simple and maintainable
