@@ -10,7 +10,11 @@ const store = {
   edges: [],
   activeNodeId: '1',
   activeNode: createInitialNode(),
+  graphId: 'g1',
   isSyncing: false,
+  sessions: [{ id: 'g1', title: 'Current session', updatedAt: '2026-04-14T03:00:00.000Z' }],
+  sessionsHasMore: true,
+  isLoadingSessions: false,
   setNodes: vi.fn(),
   setEdges: vi.fn(),
   setActiveNode: vi.fn(),
@@ -19,6 +23,9 @@ const store = {
   generateAIResponse: vi.fn(async () => {}),
   resetGraph: vi.fn(),
   syncGraph: vi.fn(async () => {}),
+  loadGraph: vi.fn(async () => {}),
+  loadMoreSessions: vi.fn(async () => {}),
+  deleteGraph: vi.fn(async () => {}),
 }
 
 vi.mock('../../store/GraphContext', () => ({
@@ -75,11 +82,14 @@ describe('FlowEditor', () => {
     store.nodes = [createInitialNode()]
     store.activeNodeId = '1'
     store.activeNode = createInitialNode()
+    store.graphId = 'g1'
     store.isSyncing = false
+    store.sessions = [{ id: 'g1', title: 'Current session', updatedAt: '2026-04-14T03:00:00.000Z' }]
+    store.sessionsHasMore = true
+    store.isLoadingSessions = false
   })
 
   it('renders editor controls and delegates button actions', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(<FlowEditor />)
 
     fireEvent.click(screen.getByTitle('New Graph'))
@@ -90,19 +100,84 @@ describe('FlowEditor', () => {
     fireEvent.change(screen.getByTestId('global-input-textarea'), { target: { value: 'Hello flow' } })
     fireEvent.click(screen.getByTestId('send-button'))
 
-    expect(confirmSpy).toHaveBeenCalled()
     expect(store.resetGraph).toHaveBeenCalled()
     expect(store.syncGraph).toHaveBeenCalled()
     expect(store.updateNodeUserText).toHaveBeenCalledWith('1', 'Hello flow')
     expect(store.generateAIResponse).toHaveBeenCalledWith('1')
   })
 
-  it('does not reset the graph when confirmation is cancelled', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('renders session history, switches sessions, and loads more history', () => {
+    store.sessions = [
+      { id: 'g1', title: 'Current session', updatedAt: '2026-04-14T03:00:00.000Z' },
+      { id: 'g2', title: 'Older session', updatedAt: '2026-04-14T02:00:00.000Z' },
+    ]
+
+    render(<FlowEditor />)
+
+    fireEvent.click(screen.getByText('Older session').closest('button') as HTMLButtonElement)
+    fireEvent.click(screen.getByRole('button', { name: 'Load more sessions' }))
+
+    expect(store.loadGraph).toHaveBeenCalledWith('g2')
+    expect(store.loadMoreSessions).toHaveBeenCalled()
+    expect(screen.getByText('Current session')).toBeInTheDocument()
+  })
+
+  it('deletes a session from the sidebar without opening it', () => {
+    store.sessions = [
+      { id: 'g1', title: 'Current session', updatedAt: '2026-04-14T03:00:00.000Z' },
+      { id: 'g2', title: 'Older session', updatedAt: '2026-04-14T02:00:00.000Z' },
+    ]
+
+    render(<FlowEditor />)
+
+    fireEvent.click(screen.getByTestId('delete-session-g2'))
+
+    expect(store.deleteGraph).toHaveBeenCalledWith('g2')
+    expect(store.loadGraph).not.toHaveBeenCalledWith('g2')
+  })
+
+  it('creates a new graph immediately without a browser confirmation modal', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm')
     render(<FlowEditor />)
 
     fireEvent.click(screen.getByTitle('New Graph'))
-    expect(store.resetGraph).not.toHaveBeenCalled()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(store.resetGraph).toHaveBeenCalledTimes(1)
+  })
+
+  it('temporarily expands the collapsed sidebar on hover and keeps manual expand control', () => {
+    render(<FlowEditor />)
+
+    const sidebar = screen.getByTestId('session-sidebar')
+    expect(sidebar).not.toHaveClass('sidebar--collapsed')
+    expect(screen.getByText('Sessions')).toBeInTheDocument()
+    expect(screen.getByText('Current session')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+    expect(sidebar).toHaveClass('sidebar--collapsed')
+    expect(screen.queryByText('Sessions')).not.toBeInTheDocument()
+    expect(screen.queryByText('Current session')).not.toBeInTheDocument()
+
+    fireEvent.mouseEnter(sidebar)
+
+    expect(sidebar).not.toHaveClass('sidebar--collapsed')
+    expect(screen.getByText('Sessions')).toBeInTheDocument()
+    expect(screen.getByText('Current session')).toBeInTheDocument()
+
+    fireEvent.mouseLeave(sidebar)
+
+    expect(sidebar).toHaveClass('sidebar--collapsed')
+    expect(screen.queryByText('Sessions')).not.toBeInTheDocument()
+
+    fireEvent.mouseEnter(sidebar)
+    fireEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }))
+    fireEvent.mouseLeave(sidebar)
+
+    expect(sidebar).not.toHaveClass('sidebar--collapsed')
+    expect(screen.getByText('Sessions')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
   })
 
   it('uses React Flow callbacks for edges, nodes, selection, and context menus', () => {

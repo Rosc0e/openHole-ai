@@ -13,7 +13,7 @@ import {
   type OnConnectEnd,
   type OnConnectStart,
 } from '@xyflow/react'
-import { PlusIcon, RefreshCwIcon, SendHorizontalIcon, Settings2Icon } from 'lucide-react'
+import { PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, RefreshCwIcon, SendHorizontalIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { SettingsModal } from '../SettingsModal'
 import { useGraphStore } from '../../store/GraphContext'
@@ -34,6 +34,8 @@ export function FlowEditor() {
   const reactFlow = useReactFlow<ChatNode, ChatEdge>()
   const connectingNodeId = useRef<string | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarHoverExpanded, setIsSidebarHoverExpanded] = useState(false)
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -171,48 +173,151 @@ export function FlowEditor() {
   }, [store])
 
   const onCreateNewGraph = useCallback(() => {
-    if (window.confirm('Are you sure? This will clear the current graph.')) {
-      store.resetGraph()
-    }
+    store.resetGraph()
   }, [store])
+
+  const isSidebarVisuallyCollapsed = isSidebarCollapsed && !isSidebarHoverExpanded
+
+  const onToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((current) => !current)
+    setIsSidebarHoverExpanded(false)
+  }, [])
+
+  const onSidebarMouseEnter = useCallback(() => {
+    if (isSidebarCollapsed) {
+      setIsSidebarHoverExpanded(true)
+    }
+  }, [isSidebarCollapsed])
+
+  const onSidebarMouseLeave = useCallback(() => {
+    setIsSidebarHoverExpanded(false)
+  }, [])
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar__brand">RN</div>
+      <aside
+        className={cn('sidebar', isSidebarVisuallyCollapsed && 'sidebar--collapsed')}
+        data-testid="session-sidebar"
+        onMouseEnter={onSidebarMouseEnter}
+        onMouseLeave={onSidebarMouseLeave}
+      >
+        <div className="sidebar__header">
+          <div className="sidebar__header-main">
+            <div className="sidebar__brand">RN</div>
 
-        <Button className="sidebar__action" onClick={onCreateNewGraph} size="icon" title="New Graph" type="button" variant="outline">
-          <PlusIcon />
-          <span className="sr-only">New Graph</span>
-        </Button>
+            {isSidebarVisuallyCollapsed ? null : (
+              <div className="sidebar__identity">
+                <div className="sidebar__title">RabbitNode</div>
+                <div className="sidebar__subtitle">Flow editor</div>
+              </div>
+            )}
+          </div>
 
-        <Button
-          className="sidebar__action"
-          data-testid="sync-graph-button"
-          onClick={() => void store.syncGraph()}
-          title={store.isSyncing ? 'Syncing...' : 'Sync Now'}
-          size="icon"
-          type="button"
-          variant={store.isSyncing ? 'secondary' : 'outline'}
-        >
-          <RefreshCwIcon className={cn(store.isSyncing && 'animate-spin')} />
-          <span className="sr-only">Sync graph</span>
-        </Button>
+          <Button
+            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="sidebar__icon-button sidebar__toggle"
+            onClick={onToggleSidebar}
+            size="icon"
+            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            type="button"
+            variant="ghost"
+          >
+            {isSidebarCollapsed ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
+            <span className="sr-only">{isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
+          </Button>
+        </div>
 
-        <div className="sidebar__spacer" />
+        <div className="sidebar__actions">
+          <Button
+            aria-label="New Graph"
+            className="sidebar__icon-button"
+            onClick={onCreateNewGraph}
+            size="icon"
+            title="New Graph"
+            type="button"
+            variant="ghost"
+          >
+            <PlusIcon />
+            <span className="sr-only">New Graph</span>
+          </Button>
 
-        <Button
-          className="sidebar__action"
-          data-testid="open-settings-button"
-          onClick={() => setIsSettingsOpen(true)}
-          title="Settings"
-          size="icon"
-          type="button"
-          variant="outline"
-        >
-          <Settings2Icon />
-          <span className="sr-only">Settings</span>
-        </Button>
+          <Button
+            aria-label="Sync graph"
+            className={cn('sidebar__icon-button', store.isSyncing && 'sidebar__icon-button--active')}
+            data-testid="sync-graph-button"
+            onClick={() => void store.syncGraph()}
+            title={store.isSyncing ? 'Syncing...' : 'Sync Now'}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <RefreshCwIcon className={cn(store.isSyncing && 'animate-spin')} />
+            <span className="sr-only">Sync graph</span>
+          </Button>
+        </div>
+
+        {isSidebarVisuallyCollapsed ? null : (
+          <div className="sidebar__sessions">
+            <div className="sidebar__section-title">Sessions</div>
+
+            <div className="sidebar__session-list">
+              {store.sessions.map((session) => {
+                const isActive = session.id === store.graphId
+
+                return (
+                  <button
+                    key={session.id}
+                    className={cn('sidebar__session-button', isActive && 'sidebar__session-button--active')}
+                    type="button"
+                    onClick={() => void store.loadGraph(session.id)}
+                  >
+                    <div className="sidebar__session-row">
+                      <span className="sidebar__session-title">{session.title || 'Untitled Graph'}</span>
+                      <Button
+                        aria-label={`Delete ${session.title || 'Untitled Graph'}`}
+                        className="sidebar__session-delete"
+                        data-testid={`delete-session-${session.id}`}
+                        size="icon-sm"
+                        type="button"
+                        variant="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void store.deleteGraph(session.id)
+                        }}
+                      >
+                        <Trash2Icon />
+                        <span className="sr-only">Delete session</span>
+                      </Button>
+                    </div>
+                    <span className="sidebar__session-meta">{new Date(session.updatedAt).toLocaleString()}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {store.sessionsHasMore ? (
+              <Button className="sidebar__more" onClick={() => void store.loadMoreSessions()} type="button" variant="ghost">
+                {store.isLoadingSessions ? 'Loading…' : 'Load more sessions'}
+              </Button>
+            ) : null}
+          </div>
+        )}
+
+        <div className="sidebar__footer">
+          <Button
+            aria-label="Settings"
+            className="sidebar__icon-button"
+            data-testid="open-settings-button"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Settings"
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <Settings2Icon />
+            <span className="sr-only">Settings</span>
+          </Button>
+        </div>
       </aside>
 
       <main className="canvas-area">

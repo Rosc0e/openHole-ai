@@ -55,7 +55,7 @@
   --transition-medium: 220ms ease;
   --shadow-panel: 0 20px 55px color-mix(in oklab, var(--foreground) 10%, transparent);
 
-  --size-sidebar: 4.5rem;
+  --size-sidebar: 18rem;
   --size-node-width: 28.125rem;
   --size-node-min-height: 6.25rem;
   --size-handle: 0.8rem;
@@ -161,13 +161,54 @@ button {
   z-index: 10;
   display: flex;
   width: var(--size-sidebar);
+  min-width: var(--size-sidebar);
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-4);
-  padding: var(--space-4) 0;
+  padding: var(--space-4);
   border-right: 1px solid var(--color-border);
   background: color-mix(in oklab, var(--sidebar) 92%, transparent);
   backdrop-filter: blur(18px);
+  overflow: hidden;
+  transition:
+    width var(--transition-medium),
+    min-width var(--transition-medium),
+    padding var(--transition-medium);
+}
+
+.sidebar--collapsed {
+  width: 5rem;
+  min-width: 5rem;
+  padding: var(--space-3);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sidebar__header-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar__identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sidebar__actions {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--color-panel) 92%, transparent);
 }
 
 .sidebar__brand {
@@ -183,12 +224,157 @@ button {
   letter-spacing: 0.18em;
 }
 
-.sidebar__spacer {
-  flex: 1;
+.sidebar__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
-.sidebar__action {
-  border-radius: var(--radius-lg);
+.sidebar__subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.sidebar__icon-button {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.sidebar__icon-button:hover,
+.sidebar__icon-button:focus-visible,
+.sidebar__icon-button--active {
+  background: color-mix(in oklab, var(--color-surface) 78%, var(--color-panel) 22%);
+  color: var(--color-text);
+}
+
+.sidebar__icon-button:active {
+  background: color-mix(in oklab, var(--color-surface-alt) 76%, var(--color-panel) 24%);
+}
+
+.sidebar__toggle {
+  flex-shrink: 0;
+}
+
+.sidebar__footer {
+  display: flex;
+  margin-top: auto;
+}
+
+.sidebar__sessions {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sidebar__section-title {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sidebar__session-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+}
+
+.sidebar__session-button {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--color-panel) 92%, transparent);
+  color: var(--color-text);
+  text-align: left;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.sidebar__session-row {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.sidebar__session-delete {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-text-soft);
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.sidebar__session-button:hover .sidebar__session-delete,
+.sidebar__session-button:focus-visible .sidebar__session-delete,
+.sidebar__session-delete:focus-visible {
+  opacity: 1;
+}
+
+.sidebar__session-delete:hover,
+.sidebar__session-delete:focus-visible {
+  color: var(--color-text);
+}
+
+.sidebar__session-button:hover {
+  border-color: var(--color-border-strong);
+  background: color-mix(in oklab, var(--color-surface) 76%, var(--color-panel) 24%);
+}
+
+.sidebar__session-button--active {
+  border-color: var(--color-border-strong);
+  background: color-mix(in oklab, var(--color-surface) 84%, var(--color-panel) 16%);
+}
+
+.sidebar__session-title {
+  font-weight: 600;
+}
+
+.sidebar__session-meta {
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+}
+
+.sidebar__more {
+  justify-content: flex-start;
+}
+
+.sidebar--collapsed .sidebar__header {
+  flex-direction: column;
+}
+
+.sidebar--collapsed .sidebar__header-main,
+.sidebar--collapsed .sidebar__footer {
+  justify-content: center;
+}
+
+.sidebar--collapsed .sidebar__actions {
+  flex-direction: column;
+  align-items: center;
 }
 
 .canvas-area {
